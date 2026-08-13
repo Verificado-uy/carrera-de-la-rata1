@@ -1,1186 +1,932 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>La Carrera de la Rata - Simulador Financiero Uruguayo</title>
-  <style>
-    :root {
-      --bg:#0a0a0a;
-      --card:#1a1a1a;
-      --text:#e0e0e0;
-      --muted:#666;
-      --green:#4caf50;
-      --red:#f44336;
-      --orange:#ff9800;
-      --blue:#64b5f6;
-      --border:#2a2a2a;
-    }
-    * { box-sizing: border; margin:0; padding:0; }
-    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-    .container { max-width: 480px; margin: 0 auto; padding: 20px; }
-    h1 { text-align: center; margin: 20px 0; }
-    h1 span { color: var(--green); }
-    .btn { width: 100%; padding: 12px; margin: 8px 0; background: var(--blue); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
-    .btn:hover { background: #53b0ed; }
-    .btn-secondary { background: var(--muted); }
-    .btn-secondary:hover { background: #777; }
-    .btn-green { background: var(--green); }
-    .btn-green:hover { background: #44a044; }
-    .btn-red { background: var(--red); }
-    .btn-red:hover { background: #d32f2f; }
-    .btn-orange { background: var(--orange); }
-    .btn-orange:hover { background: #e68a00; }
-    .flag { width: 80px; height: 50px; margin: 20px auto; background: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg"%3E%3Crect width="200" height="100" fill="%23f5f5f5"%3E%3C/rect%3E%3C/svg%3E') no-repeat center; background-size: contain; }
-    .screen { display: none; }
-    .screen.active { display: block; }
-    .tab-btns { display: flex; gap: 4px; margin: 10px 0; }
-    .tab-btn { flex: 1; padding: 8px; background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; }
-    .tab-btn.active { border-color: var(--blue); background: var(--border); }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin: 10px 0; }
-    .stat-row { display: flex; justify-content: space-between; margin: 8px 0; }
-    .stat-label { color: var(--muted); font-size: 12px; }
-    .stat-value { font-size: 18px; font-weight: bold; }
-    .bar { height: 8px; background: var(--border); border-radius: 4px; margin: 8px 0; overflow: hidden; }
-    .bar-fill { height: 100%; width: 0%; transition: width 0.3s; }
-    .bar-green { background: var(--green); }
-    .bar-red { background: var(--red); }
-    .bar-orange { background: var(--orange); }
-    .bar-blue { background: var(--blue); }
-    .emoji { font-size: 20px; }
-    .event { padding: 10px; background: var(--border); border-radius: 4px; margin: 10px 0; display: none; }
-    .event.active { display: block; }
-    .event-forced { background: #333; }
-    .event-decision { background: #444; }
-    .event-decision .choice-btn { display: block; width: 100%; margin: 4px 0; }
-    .choice-btn { width: 48%; padding: 8px; margin: 4px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
-    .choice-btn.accept { background: var(--green); color: white; }
-    .choice-btn.reject { background: var(--red); color: white; }
-    .save-info { font-size: 12px; color: var(--muted); margin: 10px 0; text-align: center; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Carrera de la Rata — Simulador financiero uruguayo</title>
+<style>
+:root{
+  --bg:#0a0a0a; --card:#1a1a1a; --card2:#141414; --border:#2c2c2c;
+  --text:#e6e6e6; --muted:#9a9a9a;
+  --green:#4caf50; --red:#f44336; --orange:#ff9800; --blue:#64b5f6;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+#app{max-width:480px;margin:0 auto;padding:16px 12px 90px}
+h1{font-size:1.15rem;line-height:1.3}
+h2{font-size:1rem}
+.muted{color:var(--muted);font-size:.8rem}
+.green{color:var(--green)} .red{color:var(--red)} .orange{color:var(--orange)} .blue{color:var(--blue)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px}
+.card h2{font-size:.9rem;margin-bottom:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0}
+.row+.row{border-top:1px dashed #262626}
+.big{font-size:1.5rem;font-weight:700}
+.btn{background:#2b2b2b;border:1px solid #3a3a3a;color:var(--text);border-radius:8px;padding:10px 14px;font-size:.9rem;cursor:pointer;text-align:center;transition:.15s}
+.btn:hover{filter:brightness(1.25)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.green{background:var(--green);border-color:var(--green);color:#0a0a0a;font-weight:700}
+.btn.blue{background:var(--blue);border-color:var(--blue);color:#0a0a0a;font-weight:700}
+.btn.orange{background:var(--orange);border-color:var(--orange);color:#0a0a0a;font-weight:700}
+.btn.red{background:var(--red);border-color:var(--red);color:#fff;font-weight:700}
+.btn.block{display:block;width:100%}
+.btn.small{padding:6px 10px;font-size:.8rem}
+.bar{height:14px;background:#262626;border-radius:7px;overflow:hidden;position:relative}
+.bar .fill{height:100%;border-radius:7px;transition:width .4s}
+.fill.green{background:linear-gradient(90deg,#2e7d32,var(--green))}
+.fill.orange{background:linear-gradient(90deg,#e65100,var(--orange))}
+.fill.blue{background:linear-gradient(90deg,#1565c0,var(--blue))}
+.bar-label{display:flex;justify-content:space-between;font-size:.75rem;margin-bottom:4px}
+.wheel{width:110px;height:110px;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:48px;background:radial-gradient(circle at 30% 30%,#242424,#101010);border:4px dashed #3a3a3a;position:relative}
+.wheel.spin{animation:spin .9s linear infinite;border-color:var(--orange)}
+.wheel.escaped{border:4px solid var(--green);box-shadow:0 0 18px rgba(76,175,80,.45)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#0d0d0d;border-top:1px solid var(--border);padding:8px 8px calc(8px + env(safe-area-inset-bottom));z-index:50}
+.tab{background:transparent;border:1px solid transparent;border-radius:8px;padding:8px 2px;color:var(--muted);font-size:.68rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.tab .ic{font-size:1.1rem}
+.tab.active{background:#1f2a1f;color:var(--green);border-color:var(--green)}
+input[type=number],input[type=text]{width:100%;background:#101010;border:1px solid #333;border-radius:8px;color:var(--text);padding:9px 10px;font-size:.9rem;outline:none}
+input:focus{border-color:var(--blue)}
+select{background:#101010;border:1px solid #333;border-radius:8px;color:var(--text);padding:9px;font-size:.9rem}
+.tag{display:inline-block;background:#222;border:1px solid #333;border-radius:6px;padding:2px 8px;font-size:.72rem;margin:2px 2px 2px 0}
+.quote{background:linear-gradient(135deg,#1e2a1e,#1a1a1a);border:1px solid #2e4a2e;border-radius:12px;padding:12px;margin-bottom:12px;font-size:.85rem;font-style:italic}
+.tabview{display:none}
+.tabview.active{display:block}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:100;padding:16px}
+.modal.open{display:flex}
+.modal .box{background:var(--card);border:1px solid var(--border);border-radius:14px;max-width:420px;width:100%;padding:20px;text-align:center;animation:pop .2s}
+@keyframes pop{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
+.modal .emo{font-size:3rem}
+.modal .desc{color:var(--text);font-size:.9rem;line-height:1.5;margin:12px 0}
+.modal .actions{display:flex;gap:8px;margin-top:14px}
+.modal .actions .btn{flex:1}
+.screen{text-align:center;padding-top:30px}
+.screen .flag{font-size:4rem}
+.screen h2{margin:10px 0 4px}
+.list-item{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:8px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hist-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:6px}
+.chart svg{width:100%;height:170px;display:block}
+.chart .gridline{stroke:#2a2a2a;stroke-width:1}
+.chart .axis{fill:#777;font-size:9px}
+.chart .empty{fill:#777;font-size:12px}
+.legend-row{display:flex;justify-content:center;gap:14px;font-size:.75rem;margin-top:6px}
+.legend{display:flex;align-items:center;gap:5px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.small-input{display:flex;gap:6px;margin-top:8px}
+.small-input input{flex:1}
+.center{text-align:center}
+.mt8{margin-top:8px}
+.log-line{font-size:.78rem;padding:3px 0;border-bottom:1px dashed #262626;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.stat-card{text-align:center;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 6px}
+.stat-card .v{font-size:1.05rem;font-weight:700}
+.stat-card .l{font-size:.68rem;color:var(--muted);margin-top:2px}
+.option{border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer;text-align:left;background:var(--card);transition:.15s}
+.option:hover{border-color:var(--blue)}
+.option.sel{border-color:var(--green);background:#142014}
+.opt-title{font-weight:700;font-size:.9rem}
+.opt-sub{font-size:.75rem;color:var(--muted);margin-top:3px}
+.end-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}
+.footer-note{margin-top:30px;font-size:.7rem;color:#555;text-align:center}
+</style>
 </head>
 <body>
-  <div class="container">
-    <div class="flag"></div>
-    <h1>La Carrera de la Rata <span>Uruguayo</span></h1>
-    
-<!-- Pantalla Inicial -->
-    <div id="screen-inicio" class="screen active">
-      <button class="btn btn-green" id="btn-nueva">Nueva Partida</button>
-      <button class="btn btn-secondary" id="btn-continuar">Continuar Partida</button>
-      <div class="save-info" id="save-info"></div>
+<div id="app">
+
+  <div id="screen-start" class="screen">
+    <div class="flag">🇺🇾</div>
+    <h2>La Carrera de la Rata</h2>
+    <p class="muted">Simulador financiero uruguayo</p>
+    <div style="height:20px"></div>
+    <div class="row" style="justify-content:center">
+      <button class="btn green" style="margin:0 4px" onclick="startNewGame()">Nueva partida</button>
+      <button class="btn" id="btnContinue" style="margin:0 4px;display:none" onclick="continueGame()">Continuar partida</button>
     </div>
-
-    <!-- Selector de Pareja -->
-    <div id="screen-selector" class="screen">
-      <h3>Elige con quién empiezas</h3>
-      <div class="card">
-        <button class="btn btn-orange" data-tipo="solo">Solo/a</button>
-        <p style="margin: 10px 0; color: var(--muted);">Sin ingreso extra, sin gasto extra</p>
-      </div>
-      <div class="card">
-        <button class="btn btn-orange" data-tipo="estudiante">Pareja estudiante</button>
-        <p style="margin: 10px 0; color: var(--muted);">+$18.000/mes, +$3.000 gastos</p>
-      </div>
-      <div class="card">
-        <button class="btn btn-orange" data-tipo="comercio">Pareja en comercio</button>
-        <p style="margin: 10px 0; color: var(--muted);">+$32.000/mes, +$8.000 gastos</p>
-      </div>
-      <div class="card">
-        <button class="btn btn-orange" data-tipo="administrativa">Pareja administrativa</button>
-        <p style="margin: 10px 0; color: var(--muted);">+$45.000/mes, +$12.000 gastos</p>
-      </div>
-      <div class="card">
-        <button class="btn btn-orange" data-tipo="ejecutiva">Pareja ejecutiva</button>
-        <p style="margin: 10px 0; color: var(--muted);">+$65.000/mes, +$18.000 gastos</p>
-      </div>
-      <button class="btn btn-green" id="btn-empezar" style="margin-top: 20px;">Empezar Juego</button>
-    </div>
-
-    <!-- Dashboard Principal -->
-    <div id="screen-dashboard" class="screen">
-      <div class="tab-btns">
-        <button class="tab-btn active" data-tab="resumen">Resumen</button>
-        <button class="tab-btn" data-tab="trabajo">Trabajo</button>
-        <button class="tab-btn" data-tab="finanzas">Finanzas</button>
-        <button class="tab-btn" data-tab="tienda">Tienda</button>
-        <button class="tab-btn" data-tab="graficos">Gráficos</button>
-      </div>
-      
-      <!-- STATS BARRES -->
-      <div class="card" style="margin-bottom: 15px;">
-        <h4>Dinero Disponible: <span id="dinero-disponible" class="stat-value">$15.000</span></h4>
-      </div>
-      <div class="card">
-        <h4>Salario Total: <span id="salario-total" class="stat-value">$38.000</span></h4>
-      </div>
-      <div class="card">
-        <h4>Gastos/Mes: <span id="gastos-mes" class="stat-value">$35.500</span></h4>
-      </div>
-      <div class="card">
-        <h4>Ingresos Pasivos: <span id="ingresos-pasivos" class="stat-value">$0</span></h4>
-      </div>
-      <div class="card">
-        <h4>Libertad Financiera: <span id="libertad-porcentaje">0%</span></h4>
-        <div class="bar"><div class="bar-fill bar-green" id="libertad-bar" style="width:0%"></div></div>
-      </div>
-      <div class="card">
-        <h4>Estrés: <span id="estres">0%</span></h4>
-        <div class="bar"><div class="bar-fill bar-orange" id="estres-bar" style="width:0%"></div></div>
-      </div>
-
-      <!-- Rueda Animada -->
-      <div class="card" style="margin: 15px 0;">
-        <h5>Rueda de la Fortuna</h5>
-        <div id="rueda" style="text-align: center; margin: 10px 0;">
-          <span id="rueda-texto" class="emoji">🐀</span>
-          <p style="color: var(--muted); font-size: 12px;">Gira cuando gastos > pasivos</p>
-        </div>
-        <button class="btn btn-orange" id="btn-avanzar" style="width: 100%; margin-top: 10px;">Avanzar Mes</button>
-      </div>
-
-      <!-- TABS CONTENT -->
-      <!-- RESUMEN -->
-      <div id="tab-resumen" class="tab-content active">
-        <div class="card">
-          <h5>Salario Propio</h5>
-          <div class="stat-row"><span class="stat-label">Nivel:</span><span class="stat-value" id="nivel-salario">Comercio</span></span></div>
-          <div class="stat-row"><span class="stat-label">Monto:</span><span class="stat-value" id="salario-proprio">$38.000</span></div>
-        </div>
-        <div class="card">
-          <h5>Salario Pareja</h5>
-          <div class="stat-row"><span class="stat-label">Aporte:</span><span class="stat-value" id="salario-pareja">$0</span></div>
-          <div class="stat-row"><span class="stat-label">Aguinaldo:</span><span class="stat-value" id="aguinaldo-pareja">$0</span></div>
-        </div>
-        <div class="card">
-          <h5>Ingresos Pasivos</h5>
-          <div class="stat-row"><span class="stat-label">Capital:</span><span class="stat-value" id="capital-inversiones">$0</span></div>
-          <div class="stat-row"><span class="stat-label">Rendimiento Mensual:</span><span class="stat-value" id="rendimiento-mensual">$0</span></div>
-        </div>
-        <div class="card">
-          <h5>Gastos Fijos</h5>
-          <div class="stat-row"><span class="stat-label">Alquiler:</span><span class="stat-value" id="gasto-alquiler">$8.000</span></div>
-          <div class="stat-row"><span class="stat-label">UTE:</span><span class="stat-value" id="gasto-ute">$3.500</span></div>
-          <div class="stat-row"><span class="stat-label">OSE:</span><span class="stat-value" id="gasto-ose">$1.800</span></div>
-          <div class="stat-row"><span class="stat-label">Antel:</span><span class="stat-value" id="gasto-antel">$2.200</span></div>
-          <div class="stat-row"><span class="stat-label">Supermercado:</span><span class="stat-value" id="gasto-super">$12.000</span></div>
-          <div class="stat-row"><span class="stat-label">Transporte:</span><span class="stat-value" id="gasto-transporte">$2.800</span></div>
-          <div class="stat-row"><span class="stat-label">Gastos Pareja:</span><span class="stat-value" id="gastos-pareja">$0</span></div>
-        </div>
-        <div class="card">
-          <h5>Deuda y Cuotas</h5>
-          <div class="stat-row"><span class="stat-label">Deuda Total:</span><span class="stat-value" id="deuda-total">$0</span></div>
-          <div class="stat-row"><span class="stat-label">Cuotas Activas:</span><span class="stat-value" id="cuotas-total">$0</span></div>
-        </div>
-        <div class="card">
-          <h5>Balance del Mes</h5>
-          <div class="stat-row"><span class="stat-label">Ingresos:</span><span class="stat-value" id="balance-ingresos">$0</span></div>
-          <div class="stat-row"><span class="stat-label">Gastos:</span><span class="stat-value" id="balance-gastos">$0</span></div>
-          <div class="stat-row"><span class="stat-label">Balance:</span><span class="stat-value" id="balance-final" style="color: var(--green);">$0</span></div>
-        </div>
-      </div>
-
-      <!-- TRABAJO -->
-      <div id="tab-trabajo" class="tab-content">
-        <div class="card">
-          <h5>Trabajo Actual</h5>
-          <div id="info-trabajo">Comercio - $38.000 - 48hs</div>
-        </div>
-        <div class="card">
-          <h5>Trabajos Disponibles</h5>
-          <div id="lista-trabajos"></div>
-        </div>
-      </div>
-
-      <!-- FINANZAS -->
-      <div id="tab-finanzas" class="tab-content">
-        <div class="card">
-          <h5>Inversiones</h5>
-          <div id="lista-inversiones"></div>
-        </div>
-        <div class="card">
-          <h5>Deudas</h5>
-          <div id="lista-deudas"></div>
-        </div>
-        <div class="card">
-          <h5>Cuotas Activas</h5>
-          <div id="lista-cuotas-resumen"></div>
-        </div>
-      </div>
-
-      <!-- TIENDA -->
-      <div id="tab-tienda" class="tab-content">
-        <div class="card">
-          <h5>Comprar en Cuotas</h5>
-          <div id="lista-productos"></div>
-        </div>
-      </div>
-
-      <!-- GRÁFICOS -->
-      <div id="tab-graficos" class="tab-content">
-        <div class="card">
-          <h5>Ingresos vs Gastos</h5>
-          <div id="grafico-ingresos-gastos" style="height: 150px; background: var(--border); border-radius: 4px; margin: 10px 0;"></div>
-        </div>
-        <div class="card">
-          <h5>Evolución del Patrimonio</h5>
-          <div id="grafico-patrimonio" style="height: 150px; background: var(--border); border-radius: 4px; margin: 10px 0;"></div>
-        </div>
-        <div class="card">
-          <h5>Deuda vs Inversiones</h5>
-          <div id="grafico-deuda-inversion" style="height: 150px; background: var(--border); border-radius: 4px; margin: 10px 0;"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Evento Actual -->
-    <div id="evento-actual" class="event forced" style="display: none; margin: 10px 0;">
-      <strong id="evento-titulo">Evento</strong>: <span id="evento-descripcion"></span>
-      <button class="btn btn-green" id="btn-event-continuar">Continuar</button>
-    </div>
-
+    <p class="muted" style="margin-top:20px;font-size:.75rem">
+      Empezás a los 25 años en comercio ($38.000/mes) con $15.000 de ahorros.<br>
+      Meta: que tus ingresos pasivos cubran tus gastos durante 12 meses seguidos.<br>
+      La rueda muerde si llegás a los 65 sin lograrlo, si el estrés llega a 100<br>
+      o si tus deudas superan los $50.000.
+    </p>
+    <p class="footer-note">Financiado por la Canilla Libre SA — "Yerba pa' todos"</p>
   </div>
 
-  <script>
-    // Inicialización de estado del juego
-    let estadoJuego = {
-      // Estado base
-      edad: 25,
-      anosExperiencia: 0,
-      dinero: 15000,
-      salarioPropio: 38000,
-      tienePareja: false,
-      tipoPareja: null,
-      // Salario pareja
-      salarioPareja: 0,
-      // Gastos
-      gastosFijosBase: 8000 + 3500 + 1800 + 2200 + 12000 + 2800, // alquiler base + servicios + super + transporte
-      gastosPareja: 0,
-      // Ingresos pasivos
-      capitalInversiones: 0,
-      // Deudas
-      deudas: [],
-      cuotasActivas: [],
-      // Estatus
-      estres: 0,
-      mesesConsecutivosLibre: 0,
-      juegoActivo: true,
-      // Historial para gráficos
-      historial: {
-        meses: [],
-        ingresos: [],
-        gastos: [],
-        patrimonio: [],
-        deuda: [],
-        libertad: []
-      }
+  <div id="screen-couple" class="screen" style="display:none">
+    <div class="emojiH" style="font-size:2.5rem">👩‍❤️‍👨</div>
+    <h2>Elegí con quién arrancás</h2>
+    <p class="muted">Tu pareja aporta salario (con aguinaldo) pero también gastos.</p>
+    <div style="margin-top:14px;text-align:left" id="coupleList"></div>
+    <button class="btn green block" id="btnStart" disabled onclick="confirmCouple()">Comenzar la carrera 🐀</button>
+    <div style="height:12px"></div>
+    <button class="btn block" onclick="showScreen('screen-start')">← Volver</button>
+  </div>
+
+  <div id="screen-game" style="display:none">
+    <div class="hist-top">
+      <div>
+        <h1>🐀 La Carrera de la Rata</h1>
+        <p class="muted" id="lblMonth"></p>
+      </div>
+      <div style="text-align:right">
+        <p id="lblAge" style="font-weight:700"></p>
+        <button class="btn small" onclick="toMenu()">Menú</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <span>Dinero disponible</span>
+        <span class="big" id="lblMoney"></span>
+      </div>
+      <div class="row">
+        <span>Salario total</span>
+        <span id="lblSalary"></span>
+      </div>
+      <div class="row">
+        <span>Gastos / mes</span>
+        <span class="red" id="lblGastos"></span>
+      </div>
+      <div class="row" style="border:none">
+        <span>Ingresos pasivos</span>
+        <span class="green" id="lblPasivos"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="bar-label"><span>Libertad financiera <span id="lblFreeTxt"></span></span><span class="blue" id="lblFreePct"></span></div>
+      <div class="bar"><div class="fill blue" id="freeFill" style="width:0%"></div></div>
+      <div class="bar-label" style="margin-top:10px"><span>Estrés</span><span class="orange" id="lblStress"></span></div>
+      <div class="bar"><div class="fill orange" id="stressFill" style="width:0%"></div></div>
+      <div class="center" style="margin-top:12px">
+        <div class="wheel spin" id="wheel">🐀</div>
+        <p class="muted" id="wheelTxt" style="font-size:.72rem;margin-top:6px"></p>
+      </div>
+    </div>
+
+    <div class="quote" id="lblPhrase"></div>
+
+    <button class="btn green block" id="btnMes" style="padding:14px;font-size:1rem" onclick="advanceMonth()">▶ Avanzar mes</button>
+
+    <div id="tab-resumen" class="tabview active"></div>
+    <div id="tab-trabajo" class="tabview"></div>
+    <div id="tab-finanzas" class="tabview"></div>
+    <div id="tab-tienda" class="tabview"></div>
+    <div id="tab-graficos" class="tabview"></div>
+  </div>
+
+</div>
+
+<div class="tabs" id="tabbar" style="display:none">
+  <div class="tab active" data-t="resumen" onclick="showTab('resumen')"><span class="ic">📋</span>Resumen</div>
+  <div class="tab" data-t="trabajo" onclick="showTab('trabajo')"><span class="ic">💼</span>Trabajo</div>
+  <div class="tab" data-t="finanzas" onclick="showTab('finanzas')"><span class="ic">🏦</span>Finanzas</div>
+  <div class="tab" data-t="tienda" onclick="showTab('tienda')"><span class="ic">🛒</span>Tienda</div>
+  <div class="tab" data-t="graficos" onclick="showTab('graficos')"><span class="ic">📈</span>Gráficos</div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="box">
+    <div class="emo" id="mEmo">🎲</div>
+    <h2 id="mTitle"></h2>
+    <p class="desc" id="mDesc"></p>
+    <div class="actions" id="mActions"></div>
+  </div>
+</div>
+
+<script>
+const KEY='cruy';
+const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Setiembre','Octubre','Noviembre','Diciembre'];
+
+const JOBS={
+  comercio:{name:'Comercio',sal:38000,hs:48,req:0,stress:5,em:0,nota:'El punto de partida. Sin experiencia se empieza acá.'},
+  seguridad:{name:'Seguridad',sal:45000,hs:60,req:12,stress:9,em:0,nota:'Poca luz, mucha cafetera. Buen sueldo inicial.'},
+  admin:{name:'Administrativo',sal:50000,hs:44,req:24,stress:4,em:0,nota:'Excel, fotocopias y el mate de las 10.'},
+  ejecutivo:{name:'Ejecutivo',sal:70000,hs:50,req:48,stress:7,em:0,nota:'Reunión a las 8, reunión a las 11, reunión para la reunión.'},
+  gerente:{name:'Gerente',sal:110000,hs:55,req:72,stress:8,em:0,nota:'El que decide lo que piden los que deciden arriba.'},
+  emprendedor:{name:'Emprendedor',sal:25000,hs:70,req:36,stress:7,em:1,nota:'Sueldo variable: entre 70% y 130% según el mes. Como el clima.'}
+};
+const COUPLES={
+  solo:{name:'Solo/a',emo:'🧍',sal:0,gastos:0,nota:'Sin ingreso extra, sin gasto extra.'},
+  estudiante:{name:'Pareja estudiante',emo:'🎓',sal:18000,gastos:3000,nota:'+$18.000/mes, +$3.000 de gastos.'},
+  comercio:{name:'Pareja en comercio',emo:'🛒',sal:32000,gastos:8000,nota:'+$32.000/mes, +$8.000 de gastos.'},
+  admin:{name:'Pareja administrativa',emo:'💻',sal:45000,gastos:12000,nota:'+$45.000/mes, +$12.000 de gastos.'},
+  ejecutiva:{name:'Pareja ejecutiva',emo:'👔',sal:65000,gastos:18000,nota:'+$65.000/mes, +$18.000 de gastos.'}
+};
+const INVEST=[
+  {id:'pf',name:'Plazo fijo',rate:8,min:10000,'emo':'🏦',nota:'Seguro como el bondi que nunca llega.'},
+  {id:'fondo',name:'Fondo de inversión',rate:12,min:25000,'emo':'📊',nota:'Riesgo moderado, como apostar al Uruguay en el repechaje.'},
+  {id:'acciones',name:'Acciones',rate:20,min:50000,'emo':'📈',nota:'Suben, bajan, y el corazón acelera.'},
+  {id:'empr',name:'Emprendimiento',rate:25,min:100000,'emo':'🚀',nota:'Tu propio negocio (requiere 24 meses de experiencia).'}
+];
+const DEBTS=[
+  {id:'tarjeta',name:'Tarjeta de crédito',rate:35,max:50000,terms:[6,12,24],nat:'La que cobra como peaje cada 50 metros.'},
+  {id:'personal',name:'Préstamo personal',rate:25,max:200000,terms:[12,24,36],nat:'Fácil de pedir, eterno de pagar.'},
+  {id:'auto',name:'Préstamo auto',rate:18,max:400000,terms:[24,36,48],nat:'Para el cachilo con alfombra y aroma a nafta.'},
+  {id:'hipo',name:'Hipotecario',rate:12,max:1000000,terms:[120,180,240],nat:'20 años pagando la casa. Bienvenido al club.'}
+];
+const PRODUCTS=[
+  {id:'celular',name:'Celular',emo:'📱',price:36000,cuotas:12},
+  {id:'tv',name:'Smart TV',emo:'📺',price:48000,cuotas:12},
+  {id:'nb',name:'Notebook',emo:'💻',price:72000,cuotas:18},
+  {id:'moto',name:'Moto 0km',emo:'🏍️',price:180000,cuotas:24},
+  {id:'auto',name:'Auto usado',emo:'🚗',price:350000,cuotas:36},
+  {id:'ps',name:'PlayStation',emo:'🎮',price:42000,cuotas:12}
+];
+const PHRASES=[
+  'El dólar sube, el mate se enfría y el aguinaldo no alcanza ni para la tanda.',
+  'Ahorrar en Uruguay es como sacar al perro con lluvia: se puede, pero no conviene.',
+  'La inflación corre más rápido que el ómnibus en hora pico.',
+  'El gerente habla de sinergia; vos pensás en el asado del domingo.',
+  'Aguinaldo recibido, aguinaldo gastado: tradición nacional.',
+  'En la verdulería ya te conocen por el apellido.',
+  'Tu plan de ahorro compite contra la fiesta del barrio.',
+  'Jubilarse antes de los 65 acá es el verdadero unicornio.',
+  'Hay que tener plata para hacer plata... y también para el boleto.',
+  'El ómnibus siempre llega al otro día de que pediste el taxi.',
+  'Chato, si ahorrás como el tano de la esquina, la libertad es tuya.',
+  'Las cuentas no dan, pero el cafecito con churro sí.',
+  'Ser libre financieramente: poder pedir el pancho con todo.',
+  'Cuanto más ganás, más gastás. Matemática uruguaya.',
+  'El plazo fijo paga poco, pero el Colón nunca falla.',
+  'La deuda de la tarjeta es el amigo que no se va de tu asado.',
+  'Hacer horas extra para pagar las horas extra.',
+  'En verano das clases de inglés; en invierno vendés pochas.',
+  'Nadie se hace rico con el sueldo, pero todos lo intentamos.',
+  'La canasta subió tanto que el arroz ya es un lujo importado.',
+  'Gastar más de lo que ganás es como el penal de Ghiggia: no se repite.',
+  'Sabés que sos grande cuando el queso se vuelve un evento.'
+];
+
+let state=null;
+let modalStep=null;
+
+function fmt(n){return '$'+(n<0?'-':'')+Math.round(Math.abs(n)).toLocaleString('es-UY')}
+function fmtShort(n){
+  const a=Math.abs(n);
+  if(a>=1000000) return (n/1000000).toFixed(1).replace('.',',')+'M';
+  if(a>=1000) return Math.round(n/1000)+'k';
+  return Math.round(n);
+}
+function newState(couple){
+  return {
+    status:'playing',couple:couple,month:1,experience:0,
+    money:15000,stress:0,
+    job:'comercio',salPlayer:38000,salCouple:COUPLES[couple].sal,salMult:1,
+    alquiler:14000,inf:1,transporteAuto:false,
+    investments:[],debts:[],cuotas:[],
+    owned:[],freeMonths:0,phrase:pickPhrase(),
+    log:[],history:[],passive:0,totalGastos:0
+  };
+}
+function pickPhrase(){return PHRASES[Math.floor(Math.random()*PHRASES.length)]}
+
+function playerSalary(){
+  const j=JOBS[state.job];
+  const base=j.em? Math.round(j.sal*(0.7+Math.random()*0.6)) : j.sal;
+  return Math.round(base*(state.salMult||1));
+}
+function passiveIncome(){
+  let t=0;
+  state.investments.forEach(i=>t+=i.capital*i.rate/1200);
+  return t;
+}
+function fixedExpenses(){
+  const c=COUPLES[state.couple];
+  const t=state.transporteAuto?8000:2800;
+  return (state.alquiler+3500+1800+2200+12000+t+c.gastos)*state.inf;
+}
+function cuotasTotal(){
+  let t=0;
+  state.cuotas.forEach(c=>t+=c.cuota);
+  return t;
+}
+function deudaTotal(){let t=0;state.debts.forEach(d=>t+=d.payment);return t}
+function deudaRestante(){let t=0;state.debts.forEach(d=>t+=d.remaining);return t}
+function totalGastos(){return fixedExpenses()+cuotasTotal()+deudaTotal()}
+function patrimonio(){return state.money+invCapital()-deudaRestante()}
+function invCapital(){let t=0;state.investments.forEach(i=>t+=i.capital);return t}
+function monthOfYear(){return ((state.month-1)%12)+1}
+function ageNow(){return 25+Math.floor((state.month-1)/12)}
+function yearNow(){return 2026+Math.floor((state.month-1)/12)}
+
+function log(msg,cls){
+  state.log.unshift({t:msg,c:cls||''});
+  if(state.log.length>14)state.log.pop();
+}
+
+function save(){
+  try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}
+}
+function load(){const s=localStorage.getItem(KEY);return s?JSON.parse(s):null}
+function clearSave(){localStorage.removeItem(KEY)}
+function hasSave(){return !!localStorage.getItem(KEY)}
+
+function showScreen(id){
+  ['screen-start','screen-couple','screen-game'].forEach(s=>document.getElementById(s).style.display=s===id?'block':'none');
+  document.getElementById('tabbar').style.display=id==='screen-game'?'grid':'none';
+  if(id==='screen-game'){renderAll()}
+}
+function showTab(t){
+  document.querySelectorAll('.tabview').forEach(v=>v.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.t===t));
+  if(t==='graficos')drawCharts();
+}
+
+function initScreens(){
+  document.getElementById('btnContinue').style.display=hasSave()?'inline-block':'none';
+}
+
+function startNewGame(){
+  if(!confirm('¿Empezar una nueva partida? Se borra el progreso guardado.'))return;
+  clearSave();
+  buildCoupleList();
+  showScreen('screen-couple');
+}
+function continueGame(){
+  state=load();
+  if(!state)return;
+  showScreen('screen-game');
+}
+
+let selCouple=null;
+function buildCoupleList(){
+  selCouple=null;
+  document.getElementById('btnStart').disabled=true;
+  const el=document.getElementById('coupleList');
+  el.innerHTML='';
+  Object.keys(COUPLES).forEach(k=>{
+    const c=COUPLES[k];
+    const d=document.createElement('div');
+    d.className='option';
+    d.innerHTML=`<div class="opt-title">${c.emo} ${c.name}</div><div class="opt-sub">${c.nota}</div>`;
+    d.onclick=()=>{
+      selCouple=k;
+      document.querySelectorAll('#coupleList .option').forEach(o=>o.classList.remove('sel'));
+      d.classList.add('sel');
+      document.getElementById('btnStart').disabled=false;
     };
+    el.appendChild(d);
+  });
+}
+function confirmCouple(){
+  if(!selCouple)return;
+  state=newState(selCouple);
+  showScreen('screen-game');
+}
+function toMenu(){
+  if(!confirm('¿Volver al menú? El progreso queda guardado.'))return;
+  save();
+  showScreen('screen-start');
+  initScreens();
+}
 
-    // Datos de parejas
-    const parejas = {
-      solo: { salario: 0, gastos: 0, nombre: "Solo/a" },
-      estudiante: { salario: 18000, gastos: 3000, nombre: "Pareja estudiante" },
-      comercio: { salario: 32000, gastos: 8000, nombre: "Pareja en comercio" },
-      administrativa: { salario: 45000, gastos: 12000, nombre: "Pareja administrativa" },
-      ejecutiva: { salario: 65000, gastos: 18000, nombre: "Pareja ejecutiva" }
+function renderAll(){
+  renderHeader();
+  renderResumen();
+  renderTrabajo();
+  renderFinanzas();
+  renderTienda();
+  if(document.getElementById('tab-graficos').classList.contains('active'))drawCharts();
+}
+
+function renderHeader(){
+  document.getElementById('lblMonth').textContent=`Mes ${state.month} — ${MESES[monthOfYear()-1]} ${yearNow()}`;
+  document.getElementById('lblAge').textContent=`${ageNow()} años`;
+  document.getElementById('lblMoney').textContent=fmt(state.money);
+  document.getElementById('lblMoney').className='big '+(state.money<0?'red':'green');
+  const salBase=JOBS[state.job].em? 'variable': fmt(playerSalary());
+  document.getElementById('lblSalary').textContent=state.couple==='solo'? salBase : (salBase+' + '+fmt(state.salCouple));
+  const g=totalGastos(),p=passiveIncome();
+  document.getElementById('lblGastos').textContent=fmt(g);
+  document.getElementById('lblPasivos').textContent=fmt(p);
+  const pct=Math.min(100,Math.round(p/g*100));
+  document.getElementById('lblFreePct').textContent=pct+'%';
+  document.getElementById('freeFill').style.width=pct+'%';
+  document.getElementById('lblFreeTxt').textContent=state.freeMonths+'/12';
+  document.getElementById('lblStress').textContent=state.stress+'%';
+  document.getElementById('stressFill').style.width=Math.min(100,state.stress)+'%';
+  const wheel=document.getElementById('wheel');
+  if(p>=g){
+    wheel.className='wheel escaped';
+    wheel.textContent='🏃';
+    document.getElementById('wheelTxt').textContent='¡La rata escapó! Ingresos pasivos cubren todo.';
+  }else{
+    wheel.className='wheel spin';
+    wheel.textContent='🐀';
+    document.getElementById('wheelTxt').textContent='Corriendo en la rueda... gastos > pasivos';
+  }
+  document.getElementById('lblPhrase').textContent='💬 "'+state.phrase+'"';
+}
+
+function renderResumen(){
+  const j=JOBS[state.job];
+  const salP=playerSalary();
+  const salC=state.couple==='solo'?0:state.salCouple;
+  const pas=passiveIncome();
+  const fij=fixedExpenses();
+  const cuo=cuotasTotal();
+  const deu=deudaTotal();
+  const ing=salP+salC+pas;
+  const egr=fij+cuo+deu;
+  const c=COUPLES[state.couple];
+  const bal=ing-egr;
+  const transport=state.transporteAuto?'Auto 🚗 ($8.000)':'Ómnibus 🚌 ($2.800)';
+  let cuotasHtml='';
+  if(state.cuotas.length===0)cuotasHtml='<div class="muted">Sin cuotas. Bien jugado.</div>';
+  state.cuotas.forEach(cu=>{
+    cuotasHtml+=`<div class="row"><span>${cu.emo} ${cu.name} (${cu.left} restantes)</span><span class="red">-${fmt(cu.cuota)}</span></div>`;
+  });
+  let deudasHtml='';
+  if(state.debts.length===0)deudasHtml='<div class="muted">Sin deudas. El escribano aplaude.</div>';
+  state.debts.forEach(d=>{
+    deudasHtml+=`<div class="row"><span>${d.name} (${fmt(d.remaining)} restante)</span><span class="red">-${fmt(d.payment)}/mes</span></div>`;
+  });
+  document.getElementById('tab-resumen').innerHTML=`
+    <div class="row stat-card" style="padding:10px">
+      <div class="v ${bal>=0?'green':'red'}">${fmt(bal)}</div>
+      <div class="l">Balance del mes</div>
+    </div>
+    <div class="card">
+      <h2>💵 Ingresos</h2>
+      <div class="row"><span>Salario propio (${j.name})</span><span class="green">+${fmt(salP)}</span></div>
+      ${salC?`<div class="row"><span>Salario de la pareja</span><span class="green">+${fmt(salC)}</span></div>`:''}
+      <div class="row"><span>Ingresos pasivos</span><span class="green">+${fmt(pas)}</span></div>
+      <div class="row"><span>Total</span><span class="green">+${fmt(ing)}</span></div>
+    </div>
+    <div class="card">
+      <h2>💸 Egresos</h2>
+      <div class="row"><span>Alquiler</span><span class="red">-${fmt(state.alquiler*state.inf)}</span></div>
+      <div class="row"><span>UTE</span><span class="red">-${fmt(3500*state.inf)}</span></div>
+      <div class="row"><span>OSE</span><span class="red">-${fmt(1800*state.inf)}</span></div>
+      <div class="row"><span>Antel</span><span class="red">-${fmt(2200*state.inf)}</span></div>
+      <div class="row"><span>Supermercado</span><span class="red">-${fmt(12000*state.inf)}</span></div>
+      <div class="row"><span>Transporte (${transport})</span><span class="red">-${fmt((state.transporteAuto?8000:2800)*state.inf)}</span></div>
+      ${salC?`<div class="row"><span>Gastos pareja (${c.name})</span><span class="red">-${fmt(c.gastos*state.inf)}</span></div>`:''}
+      <div class="row"><span>Cuotas de productos</span><span class="red">-${fmt(cuo)}</span></div>
+      <div class="row"><span>Deudas</span><span class="red">-${fmt(deu)}</span></div>
+      <div class="row"><span>Total</span><span class="red">-${fmt(egr)}</span></div>
+    </div>
+    <div class="card"><h2>🧾 Cuotas activas</h2>${cuotasHtml}</div>
+    <div class="card"><h2>📉 Deudas activas</h2>${deudasHtml}</div>
+    <div class="card">
+      <h2>📜 Registro</h2>
+      ${state.log.length?state.log.map(l=>`<div class="log-line"><span>${l.t}</span><span class="${l.c}">${l.c?('•'):''}</span></div>`).join(''):'<div class="muted">Aún no avanzaste ningún mes.</div>'}
+    </div>`;
+}
+
+function renderTrabajo(){
+  const j=JOBS[state.job];
+  const sal=playerSalary();
+  document.getElementById('tab-trabajo').innerHTML=`
+    <div class="card">
+      <h2>💼 Trabajo actual</h2>
+      <div class="row"><span>Puesto</span><b>${j.name}</b></div>
+      <div class="row"><span>Salario</span><b class="green">${j.em?'entre $17.500 y $32.500 (variable)':'$'+fmt(sal)}</b></div>
+      <div class="row"><span>Horas semanales</span>${j.hs}hs</div>
+      <div class="row"><span>Estrés base</span>${j.stress}/10</div>
+      <div class="row"><span>Experiencia acumulada</span><b class="blue">${state.experience+1} meses</b></div>
+      ${j.em?'<p class="muted" style="margin-top:6px">Tu ingreso varía entre 70% y 130% del sueldo base cada mes.</p>':''}
+    </div>
+    <div class="card">
+      <h2>🪜 Trabajos disponibles</h2>
+      ${Object.keys(JOBS).map(k=>{
+        const o=JOBS[k];
+        const ok=o.req<=state.experience;
+        const actual=k===state.job;
+        return `<div class="list-item">
+          <div class="row"><span><b>${o.name}</b> ${actual?'<span class="tag" style="border-color:var(--green);color:var(--green)">ACTUAL</span>':''}</span><b class="${ok?'green':'red'}">${o.em?'variable':fmt(o.sal)}</b></div>
+          <div class="row" style="border:none"><span class="muted">${o.hs}hs/sem · Requiere ${o.req} meses ${ok?'✅':'🔒'}${actual?' ':''} · ${o.nota}</span></div>
+          ${!actual?`<button class="btn ${ok?'blue':' '} small block mt8" ${ok?'':'disabled'} onclick="changeJob('${k}')">${ok?'Cambiar a '+o.name:'Falta '+(o.req-state.experience)+' meses'}</button>`:''}
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+function changeJob(k){
+  if(k===state.job)return;
+  if(JOBS[k].req>state.experience){alert('Todavía no tenés la experiencia necesaria.');return}
+  state.job=k;
+  if(state.job==='emprendedor')state.salPlayer=25000;
+  log('Cambiaste a '+JOBS[k].name,'blue');
+  renderAll();
+  save();
+}
+
+function renderFinanzas(){
+  let inv='';
+  INVEST.forEach(iv=>{
+    const cap=state.investments.filter(i=>i.type===iv.id).reduce((a,i)=>a+i.capital,0);
+    const rend=cap*iv.rate/1200;
+    inv+=`<div class="list-item">
+      <div class="row"><span>${iv.emo} <b>${iv.name}</b></span><span class="tag">${iv.rate}% anual</span></div>
+      <div class="row"><span class="muted">Mínimo ${fmt(iv.min)} · ${iv.nota}</span></div>
+      <div class="row"><span>Capital invertido</span><b class="blue">${cap?fmt(cap):'—'}</b></div>
+      <div class="row" style="border:none"><span>Rendimiento mensual</span><b class="green">+${fmt(rend)}/mes</b></div>
+      ${cap>0?`<div class="muted" style="font-size:.72rem;margin-top:4px">Versus objetivo: ${fmt(cap*iv.rate/1200)}</div>`:''}
+      <div class="small-input">
+        <input type="number" id="inv-${iv.id}" min="${iv.min}" step="1000" placeholder="Monto (mín ${fmt(iv.min)})">
+        <button class="btn small blue" onclick="investir('${iv.id}')">Invertir</button>
+      </div>
+    </div>`;
+  });
+  const neg=state.investments.filter(i=>i.type==='negocio').reduce((a,i)=>a+i.capital,0);
+  if(neg>0){
+    inv+=`<div class="list-item">
+      <div class="row"><span>🌱 <b>Negocio paralelo</b></span><span class="tag">25% anual</span></div>
+      <div class="row"><span>Capital</span><b class="blue">${fmt(neg)}</b></div>
+      <div class="row" style="border:none"><span>Rendimiento mensual</span><b class="green">+${fmt(neg*25/1200)}/mes</b></div>
+    </div>`;
+  }
+  let deu='';
+  DEBTS.forEach(d=>{
+    const terms=d.terms.map((t,i)=>`<option value="${t}" ${i===Math.floor(d.terms.length/2)?'selected':''}>${t} meses</option>`).join('');
+    deu+=`<div class="list-item">
+      <div class="row"><span><b>${d.name}</b></span><span class="tag">${d.rate}% anual · máx ${fmt(d.max)}</span></div>
+      <div class="muted" style="margin-top:2px">${d.nat}</div>
+      <div class="small-input">
+        <input type="number" id="dea-${d.id}" min="1000" step="10000" placeholder="Monto">
+        <select id="term-${d.id}">${terms}</select>
+        <button class="btn small red" onclick="tomarDeuda('${d.id}')">Pedir</button>
+      </div>
+    </div>`;
+  });
+  let activas='';
+  if(state.debts.length===0)activas='<div class="muted">No tenés deudas. El banco llora en silencio.</div>';
+  state.debts.forEach((d,i)=>{
+    activas+=`<div class="list-item">
+      <div class="row"><span><b>${d.name}</b></span><span class="red">${fmt(d.payment)}/mes</span></div>
+      <div class="row"><span class="muted">Restante</span><b>${fmt(d.remaining)}</b></div>
+      <div class="row" style="border:none"><span class="muted">Interés este mes</span><span class="orange">${fmt(d.remaining*d.rate/1200)}</span></div>
+      <div class="small-input">
+        <input type="number" id="pago-${i}" min="1000" step="10000" placeholder="Abono extra (capital)">
+        <button class="btn small orange" onclick="pagarDeuda(${i})">Abonar</button>
+        <button class="btn small green" ${state.money>=d.remaining?'':'disabled'} onclick="cancelarDeuda(${i})">Pagar todo</button>
+      </div>
+    </div>`;
+  });
+  let cuo='';
+  if(state.cuotas.length===0)cuo='<div class="muted">Sin cuotas activas.</div>';
+  state.cuotas.forEach((c,i)=>{
+    cuo+=`<div class="row"><span>${c.emo} ${c.name}</span><span class="red">${fmt(c.cuota)}/mes · ${c.left} restantes</span></div>`;
+  });
+  document.getElementById('tab-finanzas').innerHTML=`
+    <div class="card"><h2>📈 Inversiones</h2>${state.investments.length===0?'<div class="muted">Todavía no invertiste nada. La plata quieta pierde contra la inflación.</div>':''}${inv}</div>
+    <div class="card"><h2>🏦 Pedir préstamos</h2>${deu}</div>
+    <div class="card"><h2>📉 Tus deudas</h2>${activas}</div>
+    <div class="card"><h2>🧾 Cuotas activas</h2>${cuo}</div>`;
+}
+function investir(id){
+  const iv=INVEST.find(i=>i.id===id);
+  if(iv&&iv.id==='empr'&&state.experience<24){
+    alert('Para invertir en un emprendimiento propio necesitás al menos 24 meses de experiencia laboral (te faltan '+(24-state.experience)+' meses).');
+    return;
+  }
+  const amt=parseFloat(document.getElementById('inv-'+id).value);
+  if(!amt||isNaN(amt)||amt<=0){alert('Ingresá un monto válido.');return}
+  if(amt<iv.min){alert('El mínimo para '+iv.name+' es '+fmt(iv.min)+'.');return}
+  if(amt>state.money){alert('No te alcanza. Tenés '+fmt(state.money)+'.');return}
+  state.money-=amt;
+  let inv=state.investments.find(i=>i.type===id);
+  if(inv)inv.capital+=amt;else state.investments.push({type:id,capital:amt,rate:iv.rate});
+  log('Invertiste '+fmt(amt)+' en '+iv.name,'blue');
+  renderAll();save();
+}
+function tomarDeuda(id){
+  const d=DEBTS.find(x=>x.id===id);
+  const amt=Math.round(parseFloat(document.getElementById('dea-'+id).value));
+  if(!amt||isNaN(amt)||amt<=0){alert('Ingresá un monto válido.');return}
+  if(amt>d.max){alert('El máximo para '+d.name+' es '+fmt(d.max)+'.');return}
+  const term=parseInt(document.getElementById('term-'+id).value);
+  const r=d.rate/1200;
+  const pay=amt*r/(1-Math.pow(1+r,-term));
+  state.money+=amt;
+  state.debts.push({name:d.name,rate:d.rate,amount:amt,remaining:amt,term:term,payment:Math.ceil(pay)});
+  log('Pediste '+fmt(amt)+' ('+d.name+')','red');
+  renderAll();save();
+}
+function pagarDeuda(i){
+  const d=state.debts[i];if(!d)return;
+  const amt=Math.round(parseFloat(document.getElementById('pago-'+i).value));
+  if(!amt||isNaN(amt)||amt<=0){alert('Ingresá un abono válido.');return}
+  if(amt>state.money){alert('No te alcanza. Tenés '+fmt(state.money)+'.');return}
+  if(amt>d.remaining)amt=d.remaining;
+  state.money-=amt;d.remaining=Math.max(0,d.remaining-amt);
+  log('Abonaste '+fmt(amt)+' a capital de '+d.name,'orange');
+  if(d.remaining<=0){state.debts.splice(i,1);log(d.name+' ¡saldate!','green')}
+  renderAll();save();
+}
+function cancelarDeuda(i){
+  const d=state.debts[i];if(!d)return;
+  if(state.money<d.remaining){alert('No te alcanza para cancelarla.') ;return}
+  state.money-=d.remaining;
+  state.debts.splice(i,1);
+  log('Cancelaste la deuda de '+d.name.replace(' de crédito','')+'. ¡Histórico!','green');
+  renderAll();save();
+}
+
+function renderTienda(){
+  document.getElementById('tab-tienda').innerHTML=`<div class="card"><h2>🛒 Tienda — todo en cuotas</h2>
+    <p class="muted" style="margin-bottom:8px">Si tenés la plata, se compra al contado. Si no... bienvenido al mundo de las cuotas.</p>
+    ${PRODUCTS.map(p=>{
+      const owned=state.owned.includes(p.id);
+      const c=Math.round(p.price/p.cuotas);
+      return `<div class="list-item">
+        <div class="row"><span>${p.emo} <b>${p.name}</b> ${owned?'<span class="tag" style="border-color:var(--green);color:var(--green)">COMPRADO</span>':''}</span><b>${fmt(p.price)}</b></div>
+        <div class="row" style="border:none"><span class="muted">${p.cuotas} cuotas de ${fmt(c)} · o al contado</span></div>
+        ${!owned?`<button class="btn block mt8 ${p.price<=state.money?'green':'orange'}" onclick="comprar('${p.id}')">${p.price<=state.money?'Comprar al contado ('+fmt(p.price)+')':'Comprar en '+p.cuotas+' cuotas'}</button>`:''}
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+function comprar(id){
+  const p=PRODUCTS.find(x=>x.id===id);
+  if(state.owned.includes(p.id))return;
+  if(state.money>=p.price){
+    state.money-=p.price;
+    state.owned.push(p.id);
+    log('Compraste '+p.name+' al contado ('+fmt(p.price)+')','green');
+  }else{
+    const cu=Math.round(p.price/p.cuotas);
+    state.cuotas.push({name:p.name,emo:p.emo,cuota:cu,left:p.cuotas});
+    state.owned.push(p.id);
+    log('Compraste '+p.name+' en '+p.cuotas+' cuotas de '+fmt(cu),'orange');
+  }
+  if(p.id==='auto'){state.transporteAuto=true;log('Ahora te movés en auto 🚗 (+$5.200/mes en transporte imputados)','red')}
+  renderAll();save();
+}
+
+function drawCharts(){
+  if(!state.history||state.history.length<2){
+    document.getElementById('tab-graficos').innerHTML='<div class="card"><h2>📈 Gráficos</h2><p class="muted">Avanzá al menos 2 meses para ver la evolución.</p></div>';
+    return;
+  }
+  const h=state.history;
+  const inc=h.map(x=>x.inc),exp=h.map(x=>x.exp),pat=h.map(x=>x.pat),inv=h.map(x=>x.inv),deu=h.map(x=>x.deu);
+  document.getElementById('tab-graficos').innerHTML=`
+    <div class="card"><h2>💸 Ingresos vs Gastos</h2><div id="c1"></div></div>
+    <div class="card"><h2>🏠 Evolución del patrimonio</h2><div id="c2"></div></div>
+    <div class="card"><h2>⚖️ Deuda vs Inversiones</h2><div id="c3"></div></div>`;
+  drawChart('c1',[inc,exp],['Ingresos','Gastos'],['#4caf50','#f44336']);
+  drawChart('c2',[pat],['Patrimonio'],['#64b5f6']);
+  drawChart('c3',[deu,inv],['Deuda','Inversiones'],['#ff9800','#4caf50']);
+}
+function drawChart(containerId,seriesArr,labels,colors){
+  const c=document.getElementById(containerId);
+  const W=320,H=170,P=30;
+  let min=Infinity,max=-Infinity;
+  seriesArr.forEach(s=>s.forEach(v=>{min=Math.min(min,v);max=Math.max(max,v)}));
+  if(min===max)max=min+1;
+  const pad=(max-min)*0.06;min-=pad;max+=pad;
+  const n=seriesArr[0].length-1;
+  let svg=`<svg class="chart" viewBox="0 0 ${W} ${H}">`;
+  for(let g=0;g<=4;g++){
+    const y=P+(H-2*P)*g/4;
+    const val=max-(max-min)*g/4;
+    svg+=`<line x1="${P}" y1="${y}" x2="${W-P}" y2="${y}" class="gridline"/>
+      <text x="${P-4}" y="${y+3}" class="axis" text-anchor="end">${fmtShort(val)}</text>`;
+  }
+  seriesArr.forEach((s,si)=>{
+    const pts=s.map((v,i)=>{
+      const x=P+(W-2*P)*i/n;
+      const y=H-P-(H-2*P)*(v-min)/(max-min);
+      return [x,y];
+    });
+    svg+=`<polyline fill="none" stroke="${colors[si]}" stroke-width="2" points="${pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')}"/>`;
+    const l=pts[pts.length-1];
+    svg+=`<circle cx="${l[0].toFixed(1)}" cy="${l[1].toFixed(1)}" r="3.5" fill="${colors[si]}"/>`;
+  });
+  svg+=`</svg><div class="legend-row">${seriesArr.map((s,i)=>`<span class="legend"><i style="background:${colors[i]}"></i>${labels[i]}</span>`).join('')}</div>`;
+  c.innerHTML=svg;
+}
+
+function openModal(title,emo,desc,type,onAccept,onReject){
+  const m=document.getElementById('modal');
+  document.getElementById('mTitle').textContent=title;
+  document.getElementById('mEmo').textContent=emo;
+  document.getElementById('mDesc').textContent=desc;
+  const a=document.getElementById('mActions');
+  if(type==='decision'){
+    a.innerHTML=`<button class="btn green" id="mbOk">Aceptar</button><button class="btn" id="mbNo">Rechazar</button>`;
+    document.getElementById('mbOk').onclick=()=>{onAccept&&onAccept();showContinue()};
+    document.getElementById('mbNo').onclick=()=>{onReject&&onReject();showContinue()};
+  }else{
+    a.innerHTML=`<button class="btn green" id="mbOk">Continuar</button>`;
+    document.getElementById('mbOk').onclick=()=>{onAccept&&onAccept();showContinue()};
+  }
+  m.classList.add('open');
+  function showContinue(){
+    a.innerHTML='<button class="btn green" id="mbGo">Continuar ▶</button>';
+    document.getElementById('mbGo').onclick=()=>{
+      m.classList.remove('open');
+      finishMonth();
     };
+  }
+}
+function finishMonth(){
+  checkEndings();
+  if(state.status!=='playing')return;
+  pushHistory();
+  state.phrase=pickPhrase();
+  save();
+  renderAll();
+}
+function pushHistory(){
+  state.history.push({
+    inc:playerSalary()+(state.couple==='solo'?0:state.salCouple)+passiveIncome(),
+    exp:totalGastos(),
+    pat:patrimonio(),
+    inv:invCapital(),
+    deu:deudaRestante()
+  });
+  if(state.history.length>600)state.history.shift();
+}
 
-    // Trabajos disponibles
-    const trabajos = [
-      { nombre: "Comercio", salario: 38000, horas: 48, reqExperiencia: 0, nivel: "base" },
-      { nombre: "Seguridad", salario: 45000, horas: 60, reqExperiencia: 12, nivel: "intermedio" },
-      { nombre: "Administrativo", salario: 50000, horas: 44, reqExperiencia: 24, nivel: "intermedio" },
-      { nombre: "Ejecutivo", salario: 70000, horas: 50, reqExperiencia: 48, nivel: "avanzado" },
-      { nombre: "Gerente", salario: 110000, horas: 55, reqExperiencia: 72, nivel: "experto" },
-      { nombre: "Emprendedor", salario: 25000, horas: 70, reqExperiencia: 36, variable: true, minSalario: 70, maxSalario: 130 }
-    ];
+function advanceMonth(){
+  if(state.status!=='playing'||modalStep)return;
+  state.month++;
+  state.experience++;
+  const my=monthOfYear();
+  const j=JOBS[state.job];
 
-    // Inversiones disponibles
-    const inversiones = [
-      { nombre: "Plazo Fijo", tipo: "segura", tasaAnual: 0.08, minCapital: 10000, capital: 0, rendimiento: 0 },
-      { nombre: "Fondo Inversión", tipo: "media", tasaAnual: 0.12, minCapital: 25000, capital: 0, rendimiento: 0 },
-      { nombre: "Acciones", tipo: "arriesgada", tasaAnual: 0.20, minCapital: 50000, capital: 0, rendimiento: 0 },
-      { nombre: "Emprendimiento", tipo: "alto riesgo", tasaAnual: 0.25, minCapital: 100000, capital: 0, rendimiento: 0 }
-    ];
+  let salP=playerSalary();
+  state.salPlayer=salP;
+  state.money+=salP;
+  if(my===6||my===12){
+    const ag=Math.round(salP*0.5);
+    state.money+=ag;
+    log('Aguinaldo propio 📆 +'+fmt(ag));
+  }
 
-    // Deudas disponibles
-    const deudasTipos = [
-      { nombre: "Tarjeta", tasaAnual: 0.35, maxDeuda: 50000, capital: 0 },
-      { nombre: "Personal", tasaAnual: 0.25, maxDeuda: 200000, capital: 0 },
-      { nombre: "Auto", tasaAnual: 0.18, maxDeuda: 400000, capital: 0 },
-      { nombre: "Hipotecario", tasaAnual: 0.12, maxDeuda: 1000000, capital: 0, anos: 20 }
-    ];
+  let salC=0;
+  if(state.couple!=='solo'){
+    salC=state.salCouple;
+    state.money+=salC;
+    if(my===6||my===12){
+      const ag=Math.round(salC*0.5);
+      state.money+=ag;
+      log('Aguinaldo de la pareja 🎁 +'+fmt(ag));
+    }
+    if(Math.random()<0.15){
+      const up=1.02+Math.random()*0.03;
+      state.salCouple=Math.round(state.salCouple*up);
+      log('A la pareja le aumentaron 📈 (+'+(up-1).toFixed(0).replace('-','')+'%)');
+    }
+  }
 
-    // Productos de tienda
-    const productosTienda = [
-      { nombre: "Celular", precio: 36000, cuotas: 12 },
-      { nombre: "Smart TV", precio: 48000, cuotas: 12 },
-      { nombre: "Notebook", precio: 72000, cuotas: 18 },
-      { nombre: "Moto 0km", precio: 180000, cuotas: 24 },
-      { nombre: "Auto usado", precio: 350000, cuotas: 36 },
-      { nombre: "PlayStation", precio: 42000, cuotas: 12 }
-    ];
+  let pas=0;
+  state.investments.forEach(i=>{
+    const r=i.capital*i.rate/1200;
+    i.capital+=r;
+    pas+=r;
+  });
+  state.passive=pas;
 
-    // Frases uruguayas
-    const frasesUruguayas = [
-      "¡Che, qué tal!",
-      "¿Cómo va la cosa?",
-      "Buen asado el de hoy",
-      "¿Te alcanza el fernet?",
-      "¡M'al paso!",
-      "Un mate que te quiero",
-      "¿Viste el partido?",
-      "Fulano y mengano"
-    ];
+  const fij=fixedExpenses();
+  state.money-=fij;
+  log('Gastos fijos -'+fmt(fij));
 
-    // Inicializar
-    function init() {
-      console.log('init() called - starting fresh game');
-      
-      // Siempre empezar un juego nuevo, sin importar si hay save
-      // Esto evita problemas con localStorage bloqueado o corrupto
-      estadoJuego = {
-        edad: 25,
-        anosExperiencia: 0,
-        dinero: 15000,
-        salarioPropio: 38000,
-        tienePareja: false,
-        tipoPareja: null,
-        salarioPareja: 0,
-        gastosFijosBase: 8000 + 3500 + 1800 + 2200 + 12000 + 2800,
-        gastosPareja: 0,
-        capitalInversiones: 0,
-        deudas: [],
-        cuotasActivas: [],
-        estres: 0,
-        mesesConsecutivosLibre: 0,
-        juegoActivo: true,
-        historial: {
-          meses: [],
-          ingresos: [],
-          gastos: [],
-          patrimonio: [],
-          deuda: [],
-          libertad: []
+  state.cuotas.forEach(c=>c.left--);
+  state.cuotas=state.cuotas.filter(c=>{
+    state.money-=c.cuota;
+    if(c.left<=0){log(c.emo+' '+c.name+' terminada de pagar ✔️','green');return false}
+    return true;
+  });
+
+  let deuPagada=0;
+  state.debts.forEach(d=>{
+    d.remaining=Math.max(0,d.remaining-(d.payment-d.remaining*d.rate/1200));
+    state.money-=d.payment;
+    deuPagada+=d.payment;
+  });
+  state.debts=state.debts.filter(d=>d.remaining>1);
+  if(deuPagada>0)log('Deuda -'+fmt(deuPagada));
+
+  if(state.month%4===0){
+    state.inf*=1.035;
+    state.salMult=(state.salMult||1)*1.035;
+    state.salCouple=Math.round(state.salCouple*1.035);
+    log('Inflación 3,5%: los gastos y los salarios se ajustaron 📈','orange');
+  }
+
+  if(!j.em&&Math.random()<0.10){
+    const up=1.02+Math.random()*0.04;
+    state.salMult=(state.salMult||1)*up;
+    log('Aumento salarial real +'+(up-1).toFixed(2).replace('.',',')+'% 🎉','green');
+  }
+
+  state.stress=Math.max(0,state.stress-4);
+
+  const g=totalGastos();
+  if(pas>=g)state.freeMonths++;else state.freeMonths=0;
+  state.passive=pas;
+  state.totalGastos=g;
+
+  save();
+  runEvent();
+}
+function runEvent(){
+  const pool=[
+    {id:'extras',t:'Horas extra',e:'🕒',forced:false,
+      d:'Tu jefe necesita a alguien el fin de semana. Podés hacer horas extra: +$8.000, pero +15 de estrés.',
+      ok:()=>{state.money+=8000;state.stress+=15;log('Horas extra: +$8.000','green')},
+      no:()=>{log('Rechazaste las horas extra. El descanso también es inversión.')}},
+    {id:'alquiler',t:'Aumento de alquiler',e:'🏠',forced:true,
+      d:'El propietario subió el alquiler $3.000. Recién pintó el zócalo y ya se siente dueño del mundo.',
+      ok:()=>{state.alquiler+=3000;log('Alquiler subió a '+fmt(state.alquiler*state.inf),'red')}},
+    {id:'salud',t:'Problema de salud',e:'🤒',forced:true,
+      d:'Una gripe de esas que te recuerdan que el mutualista es de afiliación, no de curas. Gastás $8.000 en medicamentos y reposo.',
+      ok:()=>{state.money-=8000;log('Gastos de salud -$8.000','red')}},
+    {id:'inversion',t:'Oportunidad de inversión',e:'💡',forced:false,
+      d:'Un amigo te propone poner $50.000 en un negocio paralelo (25% anual). ¿Aceptás? Si no tenés la plata, podés pedir un préstamo.',
+      ok:()=>{
+        let aviso='';
+        if(state.money<50000){
+          state.money+=50000;
+          state.debts.push({name:'Préstamo personal',rate:25,amount:50000,remaining:50000,term:24,payment:2670});
+          aviso=' (pediste un préstamo personal para cubrirlo)';
         }
-      };
-      
-      // Forzamente mostrar pantalla de inicio
-      try {
-        const inicioScreen = document.getElementById('screen-inicio');
-        if (inicioScreen) {
-          inicioScreen.classList.add('active');
-          console.log('screen-inicio activado');
-        }
-      } catch(e) {
-        console.error("Error showing screen:", e);
-      }
-      
-      attachEvents();
-    }
+        state.money-=50000;
+        let inv=state.investments.find(i=>i.type==='negocio');
+        if(inv)inv.capital+=50000;else state.investments.push({type:'negocio',capital:50000,rate:25});
+        log('Invertiste $50.000 en el negocio paralelo'+aviso,'blue');
+      },
+      no:()=>{log('Rechazaste la oportunidad. El amigo te mira raro.')}},
+    {id:'oferta',t:'Oferta de trabajo',e:'📨',forced:false,
+      d:'Una empresa te ofrece un puesto mejor. ¿Aceptás el cambio?',
+      ok:()=>{
+        const cur=JOBS[state.job].sal;
+        let best=Object.keys(JOBS).filter(k=>JOBS[k].req<=state.experience&&k!==state.job&&JOBS[k].sal>cur)
+          .sort((a,b)=>JOBS[b].sal-JOBS[a].sal);
+        if(best.length){state.job=best[0];log('Cambiaste a '+JOBS[best[0]].name+' 🎉','green')}
+        else log('La oferta no era mejor que tu puesto actual.');
+      },
+      no:()=>{log('Seguís en tu puesto. La silla ya tiene tu forma.')}},
+    {id:'auto',t:'Problema con el auto',e:'🔧',forced:true,
+      d:'Al auto le pasa lo que a todos: arrancaba perfecto hasta que el mecánico lo miró. $12.000 de arreglo.',
+      ok:()=>{state.money-=12000;log('Arreglo del auto -$12.000','red')}},
+    {id:'bono',t:'Bono de productividad',e:'🎁',forced:true,
+      d:'Tu jefe está de buen humor (pasó la selección). Bono de $15.000. No preguntes por qué.',
+      ok:()=>{state.money+=15000;log('Bono de $15.000 🎉','green')}},
+    {id:'infla',t:'Suba de precios',e:'🛒',forced:true,
+      d:'Rumores de aumento de combustibles y la leche ya subió antes que el rumor. Inflación extra del 4%.',
+      ok:()=>{state.inf*=1.04;state.salMult=(state.salMult||1)*1.04;state.salCouple=Math.round(state.salCouple*1.04);log('Inflación extra +4%','orange')}},
+    {id:'curso',t:'Curso de capacitación',e:'📚',forced:false,
+      d:'Te ofrecen un curso: cuesta $8.000 pero te suma 6 meses de experiencia laboral. ¿Lo hacés?',
+      ok:()=>{state.money-=8000;state.experience+=6;log('Curso: +6 meses de experiencia','blue')},
+      no:()=>{log('No al curso. Los viernes son sagrados.')}},
+    {id:'sorteo',t:'Sorteo interno',e:'🎰',forced:true,
+      d:'Sorteo interno de la empresa: tu número salió. Ganás $5.000 (la plata la ponen entre todos, pero nadie dice nada).',
+      ok:()=>{state.money+=5000;log('Ganaste el sorteo: +$5.000','green')}}
+  ];
+  const ev=pool.filter(e=>e.id!=='auto'||state.transporteAuto);
+  const pick=ev[Math.floor(Math.random()*ev.length)];
+  openModal(pick.t,pick.e,pick.d,pick.forced?'forced':'decision',pick.ok||null,pick.no||null);
+}
 
-    function render() {
-      // Siempre mostrar pantalla de inicio ya que init() reinicia el estado
-      try { mostrarPantalla('screen-inicio'); } catch(e) {}
-    }
+function checkEndings(){
+  if(state.money<-50000){gameOver('bankrupt');return}
+  if(state.stress>=100){gameOver('burnout');return}
+  if(state.freeMonths>=12){gameOver('escape');return}
+  if(ageNow()>=65){
+    const p=passiveIncome(),g=totalGastos();
+    if(p>=g)gameOver('libertad');
+    else if(p>=0.7*g)gameOver('casiLibre');
+    else gameOver('rueda');
+  }
+}
+const FINALES={
+  escape:{t:'¡ESCAPASTE! 🏆',e:'🏃',d:'12 meses consecutivos con ingresos pasivos cubriendo tus gastos. La rueda se detuvo y vos saliste corriendo, como el perro persiguiendo la liguilla.',c:'green'},
+  libertad:{t:'Libertad financiera 🕊️',e:'🕊️',d:'Llegaste a los 65 con ingresos pasivos cubriendo tus gastos. Jubilación con dignidad, canilla libre de por vida.',c:'green'},
+  casiLibre:{t:'Casi libre 🌤️',e:'🌤️',d:'A los 65 cubrís al menos el 70% de tus gastos con ingresos pasivos. Estuviste cerca... pero el bondi te dejó.',c:'blue'},
+  rueda:{t:'Seguís en la rueda 🐀',e:'🐀',d:'A los 65 la rueda sigue girando. La jubilación mínima alcanza para el arroz y poco más. La carrera sigue para la próxima generación.',c:'orange'},
+  burnout:{t:'Burnout 🔋',e:'🔥',d:'El estrés llegó al 100%. Entre la tarjeta, los jefes y las cuotas, te fundiste. El cerebro pidió licencia médica eterna.',c:'red'},
+  bankrupt:{t:'Bancarrota 💸',e:'💸',d:'Superaste los $50.000 de deuda negativa. Los acreedores encontraron hasta tu colección de llaveros. Game over, chato.',c:'red'}
+};
+function gameOver(code){
+  state.status='over';
+  clearSave();
+  const f=FINALES[code];
+  const m=document.getElementById('modal');
+  document.getElementById('mTitle').textContent=f.t;
+  document.getElementById('mEmo').textContent=f.e;
+  document.getElementById('mDesc').innerHTML=f.d
+    +'<div class="end-stats">'
+    +'<div class="stat-card"><div class="v">'+ageNow()+' años</div><div class="l">Edad al terminar</div></div>'
+    +'<div class="stat-card"><div class="v">'+fmt(patrimonio())+'</div><div class="l">Patrimonio final</div></div>'
+    +'<div class="stat-card"><div class="v green">'+fmt(passiveIncome())+'/mes</div><div class="l">Ingresos pasivos</div></div>'
+    +'<div class="stat-card"><div class="v red">'+fmt(totalGastos())+'/mes</div><div class="l">Gastos del mes</div></div>'
+    +'</div>';
+  document.getElementById('mActions').innerHTML='<button class="btn green" id="mRestart">Jugar de nuevo</button>';
+  document.getElementById('mRestart').onclick=()=>{
+    m.classList.remove('open');
+    showScreen('screen-start');
+    initScreens();
+  };
+  m.classList.add('open');
+}
 
-    function mostrarPantalla(screenId) {
-      console.log('mostrarPantalla called with:', screenId);
-      try {
-        const screens = document.querySelectorAll('.screen');
-        screens.forEach((s, i) => {
-          console.log('Screen ' + i + ' (' + s.id + '): removing active');
-          s.classList.remove('active');
-        });
-        const screen = document.getElementById(screenId);
-        if (screen) {
-          console.log('Screen found, adding active class');
-          screen.classList.add('active');
-        } else {
-          console.log('Screen not found:', screenId);
-        }
-      } catch (e) {
-        console.error("Error mostrando pantalla:", e);
-      }
-    }
-
-    function actualizarDashboard() {
-      const e = estadoJuego;
-      
-      // Dinero disponible
-      document.getElementById('dinero-disponible').textContent = `$${e.dinero.toLocaleString()}`;
-      
-      // Salario total (propio + pareja)
-      const salarioTotal = e.salarioPropio + e.salarioPareja;
-      document.getElementById('salario-total').textContent = `$${salarioTotal.toLocaleString()}`;
-      
-      // Gastos totales
-      const gastosTotales = e.gastosFijosBase + e.gastosPareja;
-      document.getElementById('gastos-mes').textContent = `$${gastosTotales.toLocaleString()}`;
-      
-      // Ingresos pasivos (rendimiento de inversiones)
-      const rendimiento = calcularRendimientoInversiones();
-      document.getElementById('ingresos-pasivos').textContent = `$${rendimiento.toLocaleString()}`;
-      document.getElementById('capital-inversiones').textContent = `$${e.capitalInversiones.toLocaleString()}`;
-      
-      // Libertad financiera (%)
-      const libertadPorcentaje = gastosTotales > 0 ? Math.min(rendimiento / gastosTotales * 100, 100) : 0;
-      document.getElementById('libertad-porcentaje').textContent = `${libertadPorcentaje.toFixed(1)}%`;
-      document.getElementById('libertad-bar').style.width = `${libertadPorcentaje}%`;
-      
-      // Estrés
-      document.getElementById('estres').textContent = `${e.estres}%`;
-      document.getElementById('estres-bar').style.width = `${e.estres}%`;
-      
-      // Tarjetas de resumen - Resumen
-      document.getElementById('salario-proprio').textContent = `$${e.salarioPropio.toLocaleString()}`;
-      document.getElementById('salario-pareja').textContent = `$${e.salarioPareja.toLocaleString()}`;
-      document.getElementById('gastos-pareja').textContent = `$${e.gastosPareja.toLocaleString()}`;
-      document.getElementById('deuda-total').textContent = `$${e.deudas.reduce((a,b) => a + b.capital, 0).toLocaleString()}`;
-      document.getElementById('cuotas-total').textContent = `$${e.cuotasActivas.reduce((a,b) => a + b.restante, 0).toLocaleString()}`;
-      
-      // Balance del mes actual
-      const balanceIngresos = salarioTotal + rendimiento;
-      const balanceGastos = gastosTotales;
-      document.getElementById('balance-ingresos').textContent = `$${balanceIngresos.toLocaleString()}`;
-      document.getElementById('balance-gastos').textContent = `$${balanceGastos.toLocaleString()}`;
-      const balanceFinal = e.dinero;
-      document.getElementById('balance-final').textContent = `$${balanceFinal.toLocaleString()}`;
-      document.getElementById('balance-final').style.color = balanceFinal < 0 ? 'var(--red)' : 'var(--green)';
-      
-      // Actualizar rueda
-      actualizarRueda();
-    }
-
-    function renderFinanzas() {
-      const e = estadoJuego;
-      // Renderizar inversiones
-      const invDiv = document.getElementById('lista-inversiones');
-      let invHtml = '';
-      // Mostrar opciones de inversión si aún no hay capital
-      if (e.capitalInversiones === 0) {
-        invHtml = `
-          <button class="btn btn-orange" onclick="comprarInversion(0)">Plazo Fijo ($10.000)</button>
-          <button class="btn btn-orange" onclick="comprarInversion(1)">Fondo Inversión ($25.000)</button>
-          <button class="btn btn-orange" onclick="comprarInversion(2)">Acciones ($50.000)</button>
-          <button class="btn btn-orange" onclick="comprarInversion(3)">Emprendimiento ($100.000)</button>
-        `;
-      } else {
-        // Mostrar inversiones existentes con rendimiento
-        const invNames = ["Plazo Fijo", "Fondo Inversión", "Acciones", "Emprendimiento"];
-        invHtml = `<p><strong>Capital total:</strong> $${e.capitalInversiones.toLocaleString()}</p>`;
-        for (let i = 0; i < 4; i++) {
-          const rendimiento = Math.round(e.capitalInversiones * (0.08 / 12) * (i < 2 ? 1 : i === 2 ? 1.5 : 2));
-          invHtml += `<div style="margin: 6px 0; font-size: 12px;">${invNames[i]}: $${renderimiento > 0 ? rendimiento : 0}/mes rendimiento</div>`;
-        }
-      }
-      invDiv.innerHTML = invHtml;
-      
-      // Renderizar deudas
-      const deudaDiv = document.getElementById('lista-deudas');
-      let deudaHtml = '';
-      if (e.deudas.length === 0) {
-        deudaHtml = `<p style="color: var(--muted);">No hay deudas activas</p>`;
-      } else {
-        deudaHtml = e.deudas.map((d, i) => {
-          const interes = Math.round(d.capital * (d.tasaAnual / 12));
-          return `<div style="margin: 6px 0; font-size: 12px;;">${d.tipo}: $${d.capital} deuda, $${interes} interés/mes <button class="btn btn-green btn-sm" style="font-size:10px;" onclick="pagarDeuda(${i})">Pagar</button></div>`;
-        }).join('');
-      }
-      deudaDiv.innerHTML = deudaHtml;
-      
-      // Renderizar cuotas activas
-      const cuotasDiv = document.getElementById('lista-cuotas-resumen');
-      let cuotasHtml = '';
-      if (e.cuotasActivas.length === 0) {
-        cuotasHtml = `<p style="color: var(--muted);">No hay cuotas activas</p>`;
-      } else {
-        cuotasHtml = e.cuotasActivas.map((c, i) => {
-          return `<div style="margin: 6px 0; font-size: 12px;;">${c.nombre}: $${c.restante} restante de $${c.precio} (${c.cuotas} cuotas) <button class="btn btn-green btn-sm" style="font-size:10px;" onclick="pagarCuota(${i})">Pagar</button></div>`;
-        }).join('');
-      }
-      cuotasDiv.innerHTML = cuotasHtml;
-    }
-
-    function calcularRendimientoInversiones() {
-      // Retorna rendimiento mensual basado en el capital actual (1% mensual simulado)
-      // No modifica el capital aquí - eso sucede al avanzar el mes
-      return Math.round(estadoJuego.capitalInversiones * 0.01);
-    }
-
-    function actualizarRueda() {
-      const e = estadoJuego;
-      const gastos = e.gastosFijosBase + e.gastosPareja;
-      const pasivos = calcularRendimientoInversiones();
-      const ruedaTexto = document.getElementById('rueda-texto');
-      
-      if (gastos > pasivos) {
-        ruedaTexto.textContent = "🏃"; // Huyendo
-      } else {
-        ruedaTexto.textContent = "🐀"; // Girando
-      }
-    }
-
-    function attachEvents() {
-      // Botones de pareja - solo si el elemento existe
-      const selectorBtns = document.querySelectorAll('#screen-selector .btn-orange');
-      if (selectorBtns.length > 0) {
-        selectorBtns.forEach(btn => {
-          btn.addEventListener('click', () => {
-            // Remover selección anterior
-            document.querySelectorAll('#screen-selector .btn-orange').forEach(b => b.classList.remove('selected'));
-            // Agregar selección actual
-            btn.classList.add('selected');
-            // Log para depuración
-            console.log('Tipo seleccionado:', btn.dataset.tipo);
-          });
-        });
-      }
-      
-const btnEmpezar = document.getElementById('btn-empezar');
-      if (btnEmpezar) {
-        btnEmpezar.addEventListener('click', () => {
-          const tipoSeleccionado = document.querySelector('#screen-selector .selected');
-          console.log('Elemento seleccionado:', tipoSeleccionado);
-          if (!tipoSeleccionado) return;
-          
-          const tipo = tipoSeleccionado.dataset.tipo;
-          console.log('Iniciando juego con tipo:', tipo);
-          iniciarJuego(tipo);
-        });
-      }
-
-      // Botones de tabs
-      const tabBtns = document.querySelectorAll('.tab-btn');
-      if (tabBtns.length > 0) {
-        tabBtns.forEach(btn => {
-          btn.addEventListener('click', () => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            const targetTab = document.getElementById(`tab-${btn.dataset.tab}`);
-            if (targetTab) {
-              targetTab.classList.add('active');
-            }
-            
-            // Renderizar contenido específico de cada tab
-            if (btn.dataset.tab === 'trabajo') {
-              try { renderTrabajo(); } catch(e) { console.error("Error renderizando trabajo:", e); }
-            } else if (btn.dataset.tab === 'finanzas') {
-              try { renderFinanzas(); } catch(e) { console.error("Error renderizando finanzas:", e); }
-            } else if (btn.dataset.tab === 'tienda') {
-              try { renderTienda(); } catch(e) { console.error("Error renderizando tienda:", e); }
-            }
-          });
-        });
-      }
-
-      // Avanzar mes
-      const btnAvanzar = document.getElementById('btn-avanzar');
-      if (btnAvanzar) {
-        btnAvanzar.addEventListener('click', avancarMes);
-      }
-
-      // Evento continuar - para eventos en el panel
-      const btnEventContinuar = document.getElementById('btn-event-continuar');
-      if (btnEventContinuar) {
-        btnEventContinuar.addEventListener('click', () => {
-          console.log('btn-event-continuar clicked');
-          try { document.getElementById('evento-actual').style.display = 'none'; } catch(e) {}
-          try { document.getElementById('evento-actual').className = 'event forced'; } catch(e) {}
-        });
-      }
-      
-      function attachEvents() {
-      console.log('attachEvents running');
-      
-      // Botón Nueva Partida - inicia juego directo y simple
-      const btnNueva = document.getElementById('btn-nueva');
-      if (btnNueva) {
-        btnNueva.onclick = function() {
-          console.log('Nueva partida activada');
-          // Configurar estado simple del juego
-          estadoJuego.edad = 25;
-          estadoJuego.anosExperiencia = 0;
-          estadoJuego.dinero = 15000;
-          estadoJuego.salarioPropio = 38000;
-          estadoJuego.tienePareja = false;
-          estadoJuego.tipoPareja = null;
-          estadoJuego.salarioPareja = 0;
-          estadoJuego.gastosPareja = 0;
-          estadoJuego.estres = 0;
-          estadoJuego.mesesConsecutivosLibre = 0;
-          estadoJuego.deudas = [];
-          estadoJuego.cuotasActivas = [];
-          estadoJuego.capitalInversiones = 0;
-          estadoJuego.juegoActivo = true;
-          estadoJuego.historial = {
-            meses: [],
-            ingresos: [],
-            gastos: [],
-            patrimonio: [],
-            deuda: [],
-            libertad: []
-          };
-          
-          // Mostrar dashboard y ocultar pantalla de inicio
-          try { document.getElementById('screen-dashboard').classList.add('active'); } catch(e) {}
-          try { document.getElementById('screen-inicio').classList.remove('active'); } catch(e) {}
-          
-          // Actualizar interfaz
-          try { actualizarDashboard(); } catch(e) {}
-          try { actualizarRueda(); } catch(e) {}
-          console.log('Juego reiniciado - dinero:', estadoJuego.dinero);
-        };
-      } else {
-        console.error('btn-nueva no encontrado');
-      }
-      
-      // Botones de pareja en selector - seleccionar tipo
-      const selectorBtns = document.querySelectorAll('#screen-selector .btn-orange');
-      selectorBtns.forEach(btn => {
-        btn.onclick = function() {
-          selectorBtns.forEach(b => b.classList.remove('selected'));
-          this.classList.add('selected');
-        };
-      };
-      
-      // Botón Empezar Juego en selector - aplicar pareja y empezar
-      const btnEmpezar = document.getElementById('btn-empezar');
-      if (btnEmpezar) {
-        btnEmpezar.onclick = function() {
-          const seleccionado = document.querySelector('#screen-selector .selected');
-          if (!seleccionado) {
-            alert("Por favor, selecciona una pareja primero");
-            return;
-          }
-          const tipo = seleccionado.dataset.tipo;
-          // Aplicar pareja seleccionada
-          estadoJuego.tipoPareja = tipo;
-          estadoJuego.tienePareja = true;
-          estadoJuego.salarioPareja = parejas[tipo].salario;
-          estadoJuego.gastosPareja = parejas[tipo].gastos;
-          console.log('Emparejando con:', tipo, 'Salario:', estadoJuego.salarioPareja);
-          
-          // Ir al dashboard
-          try { document.getElementById('screen-dashboard').classList.add('active'); } catch(e) {}
-          try { document.getElementById('screen-inicio').classList.remove('active'); } catch(e) {}
-          actualizarDashboard();
-          actualizarRueda();
-        };
-      }
-    }
-
-    function iniciarJuego(tipo) {
-      console.log('iniciarJuego llamado con tipo:', tipo);
-      console.log('Estado actual antes de iniciar - tipoPareja:', estadoJuego.tipoPareja);
-      estadoJuego.tipoPareja = tipo;
-      estadoJuego.tienePareja = true;
-      estadoJuego.salarioPareja = parejas[tipo].salario;
-      estadoJuego.gastosPareja = parejas[tipo].gastos;
-      estadoJuego.estres = 0;
-      estadoJuego.mesesConsecutivosLibre = 0;
-      estadoJuego.deudas = [];
-      estadoJuego.cuotasActivas = [];
-      estadoJuego.capitalInversiones = 0;
-      estadoJuego.edad = 25;
-      estadoJuego.anosExperiencia = 0;
-      estadoJuego.juegoActivo = true;
-      
-      // Guardar
-      localStorage.setItem('cruy', JSON.stringify(estadoJuego));
-      
-      console.log('Mostrando pantalla dashboard');
-      mostrarPantalla('screen-dashboard');
-      render();
-    }
-
-    function avancarMes() {
-      if (!estadoJuego.juegoActivo) return;
-      
-      const e = estadoJuego;
-      const mesIdx = e.historial.meses.length; // índice del mes actual (0-based)
-      const esJunioDiciembre = [5, 11].includes(mesIdx); // junio=6, dic=12 (0-indexado desde start)
-      
-      // 1. Cobrar salario propio + aguinaldo mitad
-      let aguinaldoPropio = 0;
-      if (esJunioDiciembre) {
-        aguinaldoPropio = e.salarioPropio * 0.5;
-      }
-      e.dinero += e.salarioPropio + aguinaldoPropio;
-      
-      // 2. Cobrar salario pareja + aguinaldo mitad si aplica
-      let aguinaldoPareja = 0;
-      if (esJunioDiciembre && e.tienePareja) {
-        aguinaldoPareja = e.salarioPareja * 0.5;
-      }
-      e.dinero += e.salarioPareja + aguinaldoPareja;
-      
-      // 3. Cobrar ingresos pasivos (se reinvierten automáticamente)
-      const rendimiento = calcularRendimientoInversiones();
-      e.dinero += rendimiento;
-      e.capitalInversiones += rendimiento;
-      
-      // 4. Pagar gastos fijos: alquiler base + servicios + super + transporte + gastos pareja
-      const gastosBase = e.gastosFijosBase + e.gastosPareja;
-      
-      // Si no tiene dinero suficiente, generar deuda en tarjeta
-      if (e.dinero < gastosBase) {
-        const falta = gastosBase - e.dinero;
-        e.deudas.push({ tipo: "Tarjeta", capital: falta, tasaAnual: 0.35 });
-        e.dinero = 0;
-      } else {
-        e.dinero -= gastosBase;
-      }
-      
-      // 5. Pagar cuotas de productos comprados
-      let totalCuotas = 0;
-      e.cuotasActivas = e.cuotasActivas.filter(cota => {
-        if (cota.restante > 0) {
-          totalCuotas += cota.cuotaMensual;
-          cota.restante -= cota.cuotaMensual;
-          if (cota.restante <= 0) {
-            cota.restante = 0;
-            return false; // Pagado y removido
-          }
-          return true; // Sigue activo
-        }
-        return false;
-      });
-      e.dinero -= totalCuotas;
-      
-      // 6. Pagar cuotas de deudas (capital + interés mensual)
-      e.deudas = e.deudas.map(deuda => {
-        const interesMensual = Math.round(deuda.capital * (deuda.tasaAnual / 12));
-        const totalPago = interesMensual + 20; // pago mínimo $20 + interés
-        if (e.dinero >= totalPago) {
-          e.dinero -= totalPago;
-          deuda.capital = Math.max(0, deuda.capital - 20); // reducir capital en $20
-          return { ...deuda, capital: deuda.capital };
-        } else {
-          // Paga lo que pueda y agrega interés por falta
-          deuda.capital += interesMensual;
-          e.dinero = 0;
-          return { ...deuda, capital: deuda.capital };
-        }
-      });
-      // Remover deudas pagadas completamente o con capital <= 0
-      e.deudas = e.deudas.filter(d => d.capital > 0);
-      
-      // 7. Inflación cada 4 meses (después del mes 4, 8, 12...)
-      if (mesIdx > 0 && mesIdx % 4 === 0) {
-        e.gastosFijosBase *= 1.035; // 3.5% de inflación
-      }
-      
-      // 8. Aumento salarial aleatorio (10% chance): +2% a 6% según el trabajo
-      if (Math.random() < 0.1) {
-        const aumento = Math.random() * 4 + 2; // entre 2% y 6%
-        let nuevoSalario = e.salarioPropio * (1 + aumento / 100);
-        // Podría limitar por nivel de trabajo aquí si se quiere
-        e.salarioPropio = Math.round(nuevoSalario);
-      }
-      
-      // 9. Evento aleatorio (puede ser forzado o de decisión)
-      eventoAleatorio();
-      
-      // 10. Verificar finales del juego
-      verificarFinales();
-      
-      // Actualizar tracking de meses consecutivos libres
-      const gastosTotales = e.gastosFijosBase + e.gastosPareja;
-      const pasivos = calcularRendimientoInversiones();
-      if (pasivos >= gastosTotales) {
-        e.mesesConsecutivosLibre++;
-      } else {
-        e.mesesConsecutivosLibre = 0; // reset si falla algún mes
-      }
-      
-      // Actualizar historial de gráficos
-      e.historial.meses.push(mesIdx + 1);
-      e.historial.ingresos.push(e.salarioPropio + e.salarioPareja + rendimiento);
-      e.historial.gastos.push(gastosBase);
-      e.historial.patrimonio.push(e.dinero + e.deudas.reduce((a,b) => a + b.capital, 0) + e.capitalInversiones);
-      e.historial.deuda.push(e.deudas.reduce((a,b) => a + b.capital, 0));
-      
-      actualizarDashboard();
-      actualizarRueda();
-      guardarJuego();
-    }
-
-    function eventoAleatorio() {
-      const e = estadoJuego;
-      // Probabilidad: 70% evento forzado, 30% decisión
-      const esForzado = Math.random() < 0.7;
-      
-      if (esForzado) {
-        // Evento forzado - aplicar efecto y mostrar en panel
-        const eventosForzados = [
-          { titulo: "Aumento de alquiler", desc: "+$3.000 en gastos", efecto: () => { e.gastosFijosBase += 3000; } },
-          { titulo: "Problema de salud", desc: "-$8.000 del dinero", efecto: () => { e.dinero -= 8000; } },
-          { titulo: "Oportunidad de inversión", desc: "$50.000 para negocio paralelo", efecto: () => { 
-            if (e.dinero >= 50000) { e.dinero -= 50000; e.capitalInversiones += 50000; }
-            else if (e.deudas.some(d => d.capital > 0 && d.tipo !== "Hipotecario")) {
-              e.deudas.push({ tipo: "Tarjeta", capital: 50000, tasaAnual: 0.35 });
-              e.dinero = 0;
-              e.capitalInversiones += 50000;
-            }
-          } },
-          { titulo: "Suba de precios (inflación +4%)", desc: "Gastos suben un 4%", efecto: () => { e.gastosFijosBase *= 1.04; } },
-          { titulo: "Bono de productividad", desc: "+$15.000", efecto: () => { e.dinero += 15000; } },
-          { titulo: "Sorteo interno", desc: "+$5.000", efecto: () => { e.dinero += 5000; } },
-          { titulo: "Problema con el auto", desc: "-$12.000", efecto: () => { if (tieneAuto(e)) { e.dinero -= 12000; } } },
-          { titulo: "Curso de capacitación", desc: "-$8.000, +6 meses experiencia", efecto: () => { e.dinero -= 8000; e.anosExperiencia += 6; } }
-        ];
-        
-        const evento = eventosForzados[Math.floor(Math.random() * eventosForzados.length)];
-        evento.efecto();
-        // Mostrar en el panel evento-actual con botón Continuar
-        document.getElementById('evento-titulo').textContent = evento.titulo;
-        document.getElementById('evento-descripcion').textContent = evento.desc;
-        document.getElementById('evento-actual').className = 'event forced';
-        document.getElementById('evento-actual').style.display = 'block';
-      } else {
-        // Evento de decisión - mostrar en panel con botones Accept/Rechazar
-        const eventosDecision = [
-          { titulo: "Horas extra", desc: "+$8.000 pero +15 estrés", aceptar: () => { e.dinero += 8000; e.estres += 15; }, rechazar: () => {} },
-          { titulo: "Oportunidad de inversión", desc: "$50.000 para negocio paralelo", aceptar: () => { if (e.dinero >= 50000) { e.dinero -= 50000; e.capitalInversiones += 50000; } }, rechazar: () => {} },
-          { titulo: "Curso de capacitación", desc: "-$8.000, +6 meses experiencia", aceptar: () => { e.dinero -= 8000; e.anosExperiencia += 6; }, rechazar: () => {} }
-        ];
-        
-        const evento = eventosDecision[Math.floor(Math.random() * eventosDecision.length)];
-        // Mostrar en panel con botones de decisión
-        document.getElementById('evento-titulo').textContent = evento.titulo;
-        document.getElementById('evento-descripcion').textContent = evento.desc;
-        document.getElementById('evento-actual').className = 'event decision';
-        document.getElementById('evento-actual').style.display = 'block';
-        
-        // Reemplazar botón Continuar por botones Accept/Rechazar
-        const btnContinuar = document.getElementById('btn-event-continuar');
-        btnContinuar.style.display = 'none';
-        
-        // Remover botones anteriores si existen
-        const oldChoiceBtns = document.querySelectorAll('#evento-actual .choice-btn');
-        oldChoiceBtns.forEach(b => b.remove());
-        
-        const btnAceptar = document.createElement('button');
-        btnAceptar.className = 'choice-btn accept';
-        btnAceptar.textContent = 'Aceptar';
-        btnAceptar.style.marginRight = '10px';
-        
-        const btnRechazar = document.createElement('button');
-        btnRechazar.className = 'choice-btn reject';
-        btnRechazar.textContent = 'Rechazar';
-        
-        btnContinuar.parentNode.insertBefore(btnAceptar, btnContinuar);
-        btnContinuar.parentNode.insertBefore(btnRechazar, btnContinuar);
-      }
-    }
-
-    function mostrarDecision(evento) {
-      const overlay = document.createElement('div');
-      overlay.style.position = 'fixed';
-      overlay.style.top = 0;
-      overlay.style.left = 0;
-      overlay.style.width = '100%';
-      overlay.style.height = '100%';
-      overlay.style.background = 'rgba(0,0,0,0.8)';
-      overlay.style.zIndex = '9999';
-      overlay.style.display = 'flex';
-      overlay.style.flexDirection = 'column';
-      overlay.style.alignItems = 'center';
-      overlay.style.justifyContent = 'center';
-      
-      overlay.innerHTML = `
-        <div style="background: var(--card); padding: 20px; border-radius: 8px; color: var(--text); min-width: 200px;">
-          <h3>${evento.titulo}</h3>
-          <p>${evento.desc}</p>
-          <div style="display: flex; gap: 10px; margin-top: 20px;">
-            <button class="choice-btn accept" style="flex: 1;">Aceptar</button>
-            <button class="choice-btn reject" style="flex: 1;">Rechazar</button>
-          </div>
-        </div>
-      `;
-      
-      document.body.appendChild(overlay);
-      
-      overlay.querySelector('.accept').addEventListener('click', () => {
-        evento.aceptar();
-        document.body.removeChild(overlay);
-        // Continuar después de aceptar
-        setTimeout(() => {
-          document.getElementById('evento-actual').classList.remove('active');
-        }, 100);
-      });
-      
-      overlay.querySelector('.reject').addEventListener('click', () => {
-        evento.rechazar();
-        document.body.removeChild(overlay);
-      });
-    }
-
-    function mostrarEventoForzado(titulo, descripcion) {
-      document.getElementById('evento-titulo').textContent = titulo;
-      document.getElementById('evento-descripcion').textContent = descripcion;
-      document.getElementById('evento-actual').classList.add('active');
-    }
-
-    function verificarFinales() {
-      const e = estadoJuego;
-      const gastos = e.gastosFijosBase + e.gastosPareja;
-      const pasivos = calcularRendimientoInversiones();
-      
-      // Burnout
-      if (e.estres >= 100) {
-        mostrarFinal("Burnout", "El estrés te alcanzó al 100%. Mejor suerte la próxima.");
-        e.juegoActivo = false;
-        return;
-      }
-      
-      // Bancarrota
-      if (e.dinero < -50000) {
-        mostrarFinal("Bancarrota", "Te cargaste en deudas por $50.000 negativos. La rueda te gana.");
-        e.juegoActivo = false;
-        return;
-      }
-      
-      // Llegó a 65 años
-      if (e.edad >= 65) {
-        if (e.mesesConsecutivosLibre >= 12) {
-          mostrarFinal("Libertad Financiera", "¡Lograste que los ingresos pasivos cubrieran los gastos durante 12 meses! Te fuiste a los 65 relajado.");
-        } else if (pasivos >= gastos * 0.7) {
-          mostrarFinal("Casi Libre", "A los 65 tenías el 70% de los gastos cubiertos por ingresos pasivos. Casi lograste la libertad.");
-        } else {
-          mostrarFinal("En la Rueda", "Llegaste a los 65 sin libertad financiera. La rata te ganó.");
-        }
-        e.juegoActivo = false;
-        return;
-      }
-      
-      // Verificar 12 meses consecutivos con pasivos >= gastos
-      // (esto se verifica al final de cada mes)
-    }
-
-    function mostrarFinal(titulo, descripcion) {
-      const pantallaFinal = document.createElement('div');
-      pantallaFinal.style.position = 'fixed';
-      pantallaFinal.style.top = 0;
-      pantallaFinal.style.left = 0;
-      pantallaFinal.style.width = '100%';
-      pantallaFinal.style.height = '100%';
-      pantallaFinal.style.background = 'rgba(0,0,0,0.9)';
-      pantallaFinal.style.zIndex = '9999';
-      pantallaFinal.style.color = 'var(--text)';
-      pantallaFinal.style.display = 'flex';
-      pantallaFinal.style.flexDirection = 'column';
-      pantallaFinal.style.alignItems = 'center';
-      pantallaFinal.style.justifyContent = 'center';
-      
-      pantallaFinal.innerHTML = `
-        <h2>${titulo}</h2>
-        <p>${descripcion}</p>
-        <button class="btn btn-green" style="margin-top: 20px;">Nueva Partida</button>
-      `;
-      
-      document.body.appendChild(pantallaFinal);
-      pantallaFinal.querySelector('button').addEventListener('click', () => {
-        document.body.removeChild(pantallaFinal);
-        reiniciarJuego();
-      });
-    }
-
-function reiniciarJuego() {
-      estadoJuego = {
-        edad: 25,
-        anosExperiencia: 0,
-        dinero: 15000,
-        salarioPropio: 38000,
-        tienePareja: false,
-        tipoPareja: null,
-        salarioPareja: 0,
-        gastosFijosBase: 8000 + 3500 + 1800 + 2200 + 12000 + 2800,
-        gastosPareja: 0,
-        capitalInversiones: 0,
-        deudas: [],
-        cuotasActivas: [],
-        estres: 0,
-        mesesConsecutivosLibre: 0,
-        juegoActivo: true,
-        historial: {
-          meses: [],
-          ingresos: [],
-          gastos: [],
-          patrimonio: [],
-          deuda: [],
-          libertad: []
-        }
-      };
-      localStorage.removeItem('cruy');
-      render();
-    }
-
-    function cambiarTrabajo(nuevoIdx) {
-      const e = estadoJuego;
-      const nuevo = trabajos[nuevoIdx];
-      // Verificar requisitos de experiencia
-      if (e.anosExperiencia >= nuevo.reqExperiencia || nuevo.nivel === "base") {
-        e.trabajoActual = { nombre: nuevo.nombre, salario: nuevo.salario, horas: nuevo.horas, estrés: 0, reqExperiencia: nuevo.reqExperiencia };
-        // Reducir estrés en un poco al cambiar de trabajo bueno
-        if (e.estres > 0) e.estres -= 5;
-        if (e.estres < 0) e.estres = 0;
-        renderTrabajo();
-        actualizarDashboard();
-      }
-    }
-
-    function comprarAlContado(idx) {
-      const e = estadoJuego;
-      const prod = productosTienda[idx];
-      if (e.dinero >= prod.precio) {
-        e.dinero -= prod.precio;
-        // Marcar como ya tiene el producto
-        renderTienda();
-        actualizarDashboard();
-      } else {
-        // Ir a cuotas
-        comprarCuotas(idx);
-      }
-    }
-
-    function comprarCuotas(idx) {
-      const e = estadoJuego;
-      const prod = productosTienda[idx];
-      // Crear cuota inicial
-      const cuotaInicial = Math.round(prod.precio * 0.2); // 20% inicial
-      const restante = prod.precio - cuotaInicial;
-      e.cuotasActivas.push({
-        nombre: prod.nombre,
-        precio: prod.precio,
-        restante: restante,
-        cuotaMensual: Math.round(restante / prod.cuotas),
-        cuotas: prod.cuotas
-      });
-      e.dinero = 0; // No tiene dinero después del enganche
-      renderTienda();
-      actualizarDashboard();
-    }
-
-    function comprarInversion(tipo) {
-      const inversionesOpts = [
-        { nombre: "Plazo Fijo", min: 10000, tasa: 0.08 },
-        { nombre: "Fondo Inversión", min: 25000, tasa: 0.12 },
-        { nombre: "Acciones", min: 50000, tasa: 0.20 },
-        { nombre: "Emprendimiento", min: 100000, tasa: 0.25 }
-      ];
-      const inv = inversionesOpts[tipo];
-      if (estadoJuego.dinero >= inv.min) {
-        estadoJuego.dinero -= inv.min;
-        // Inicializar capital de inversión (compartido)
-        if (estadoJuego.capitalInversiones === 0) {
-          estadoJuego.capitalInversiones = inv.min;
-        }
-        renderFinanzas();
-        actualizarDashboard();
-      } else {
-        alert(`Necesitas $${inv.min} para esta inversión`);
-      }
-    }
-
-    function pagarDeuda(idx) {
-      const e = estadoJuego;
-      const deuda = e.deudas[idx];
-      if (!deuda) return;
-      const pagoMin = 20 + Math.round(deuda.capital * (deuda.tasaAnual / 12));
-      if (e.dinero >= pagoMin) {
-        e.dinero -= pagoMin;
-        deuda.capital = Math.max(0, deuda.capital - 20);
-        // Remover si pagada
-        if (deuda.capital <= 0) {
-          e.deudas.splice(idx, 1);
-        }
-        renderFinanzas();
-        actualizarDashboard();
-      }
-    }
-
-    function pagarCuota(idx) {
-      const e = estadoJuego;
-      const cuota = e.cuotasActivas[idx];
-      if (!cuota) return;
-      if (e.dinero >= cuota.cuotaMensual) {
-        e.dinero -= cuota.cuotaMensual;
-        cuota.restante -= cuota.cuotaMensual;
-        if (cuota.restante <= 0) {
-          e.cuotasActivas.splice(idx, 1);
-        }
-        renderFinanzas();
-        actualizarDashboard();
-      }
-    }
-
-    function renderGraficos() {
-      const e = estadoJuego;
-      const meses = e.historial.meses;
-      const ingresos = e.historial.ingresos;
-      const gastos = e.historial.gastos;
-      const patrimonio = e.historial.patrimonio;
-      const deuda = e.historial.deuda;
-      const inversion = e.capitalInversiones;
-      
-      const ancho = 400;
-      const alto = 150;
-      
-      // Encontrar el valor máximo para escalar los gráficos
-      let maxVal = 1;
-      if (ingresos && ingresos.length > 0) maxVal = Math.max(maxVal, ...ingresos);
-      if (gastos && gastos.length > 0) maxVal = Math.max(maxVal, ...gastos);
-      if (patrimonio && patrimonio.length > 0) maxVal = Math.max(maxVal, ...patrimonio);
-      if (deuda && deuda.length > 0) maxVal = Math.max(maxVal, ...deuda);
-      if (inversion > 0) maxVal = Math.max(maxVal, inversion);
-      
-      const pasoY = alto / maxVal;
-      const pasoX = ancho / Math.max(meses.length - 1, 1);
-      
-      // Gráfico 1: Ingresos vs Gastos
-      let pathIn = "M40,";
-      let pathGast = "M40,";
-      meses.forEach((m, i) => {
-        const x = 40 + i * pasoX;
-        const yIn = alto - (ingresos[i] || 0) * pasoY;
-        const yGast = alto - (gastos[i] || 0) * pasoY;
-        pathIn += `${i > 0 ? 'L' : ''}${x},${yIn}`;
-        pathGast += `${i > 0 ? 'L' : ''}${x},${yGast}`;
-      });
-const svg1 = `<svg width="${ancho}" height="${alto}" style="background: var(--border); border-radius: 4px;"><line x1="40" y1="${alto-20}" x2="${ancho-20}" y2="${alto-20}" stroke="#666" stroke-width="1"/><path d="${pathIn}" fill="none" stroke="#4caf50" stroke-width="2"/><path d="${pathGast}" fill="none" stroke="#f44336" stroke-width="2"/><text x="10" y="15" fill="#4caf50">Ingresos</text><text x="10" y="30" fill="#f44336">Gastos</text></svg>`;
-      document.getElementById('grafico-ingresos-gastos').innerHTML = svg1;
-      
-      // Gráfico 2: Evolución del patrimonio
-      let pathPat = "M40,";
-      meses.forEach((m, i) => {
-        const x = 40 + i * pasoX;
-        const y = alto - (patrimonio[i] || 0) * pasoY;
-        pathPat += `${i > 0 ? 'L' : ''}${x},${y}`;
-      });
-      const svg2 = `<svg width="${ancho}" height="${alto}" style="background: var(--border); border-radius: 4px;"><line x1="40" y1="${alto-20}" x2="${ancho-20}" y2="${alto-20}" stroke="#666" stroke-width="1"/><path d="${pathPat}" fill="none" stroke="#64b5f6" stroke-width="2"/><text x="10" y="15" fill="#64b5f6">Patrimonio</text></svg>`;
-      document.getElementById('grafico-patrimonio').innerHTML = svg2;
-      
-      // Gráfico 3: Deuda vs Inversiones
-      let pathDiv = "M40,";
-      let pathInv = "M40,";
-      meses.forEach((m, i) => {
-        const x = 40 + i * pasoX;
-        const yDiv = alto - (deuda[i] || 0) * pasoY;
-        const yInv = alto - (inversion * 0.01) * pasoY;
-        pathDiv += `${i > 0 ? 'L' : ''}${x},${yDiv}`;
-        pathInv += `${i > 0 ? 'L' : ''}${x},${yInv}`;
-      });
-      const svg3 = `<svg width="${ancho}" height="${alto}" style="background: var(--border); border-radius: 4px;"><line x1="40" y1="${alto-20}" x2="${ancho-20}" y2="${alto-20}" stroke="#666" stroke-width="1"/><path d="${pathDiv}" fill="none" stroke="#f44336" stroke-width="2"/><path d="${pathInv}" fill="none" stroke="#4caf50" stroke-width="2"/><text x="10" y="15" fill="#f44336">Deuda</text><text x="10" y="30" fill="#4caf50">Inversiones</text></svg>`;
-      document.getElementById('grafico-deuda-inversion').innerHTML = svg3;
-    }
-
-    init();
-  </script>
+initScreens();
+buildCoupleList();
+</script>
 </body>
 </html>
